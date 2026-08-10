@@ -16,6 +16,7 @@ const MIME = {
   '.woff2': 'font/woff2',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
+  '.wav': 'audio/wav',
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml'
 };
@@ -25,6 +26,7 @@ createServer((request, response) => {
   let pathname = decodeURIComponent(url.pathname);
   if (pathname.endsWith('/')) pathname += 'index.html';
   if (pathname === '/og.png') pathname = '/public/og.png';
+  if (pathname === '/data-mist-passage.wav') pathname = '/public/data-mist-passage.wav';
 
 
   const target = join(root, normalize(pathname).replace(/^(\.\.[/\\])+/, ''));

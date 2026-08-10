@@ -15,7 +15,8 @@ const MIME = {
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".woff2": "font/woff2",
-  ".png": "image/png"
+  ".png": "image/png",
+  ".wav": "audio/wav"
 };
 
 const vendorDirectory = resolve(projectRoot, "vendor");

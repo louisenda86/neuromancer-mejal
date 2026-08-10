@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Neuromancer V2.3: a cover-chromatic 3D journey with squish Aulos transitions, drag-pannable cameras and uploaded-audio red halftone response.">
+<meta name="description" content="Neuromancer V2.3: a cover-chromatic 3D journey with soft Data Mist transitions, 360-degree camera orbit and uploaded-audio red halftone response.">
 <meta name="theme-color" content="#080b0d">
 <meta name="color-scheme" content="dark">
 <title>Neuromancer V2.3 // The Chromatic Sprawl</title>
@@ -521,7 +521,7 @@ body.camera-pan-dragging .cur-ring{width:58px;height:34px;border-color:var(--pin
 
 <header class="mast">
   <div class="brand"><strong>NM.84 / V2.3</strong> <span>/ The Chromatic Sprawl</span></div>
-  <div class="mast-mid"><span class="dot"></span>Hold arrow + drag // camera pan</div>
+  <div class="mast-mid"><span class="dot"></span>Hold arrow + drag // 360° orbit</div>
   <nav class="acts" id="acts" aria-label="Environment controls">
     <button id="btnDrift" aria-pressed="true">Auto drift</button>
     <button id="btnIce" aria-pressed="false">ICE layer</button>
@@ -543,7 +543,7 @@ body.camera-pan-dragging .cur-ring{width:58px;height:34px;border-color:var(--pin
 <div class="ticker" aria-hidden="true"><span><b>NODE 0001:</b> CHIBA — NINSEI STRIP // <b>NODE 0019:</b> FREESIDE SPINDLE // ENCRYPTION HANDSHAKE ACCEPTED // WINTERMUTE TRACE DETECTED ON SECTOR 7 // NEUROMANCER ARCHIVE OPEN // SIMSTIM FEED NOMINAL // <b>REMEMBER:</b> THE STREET FINDS ITS OWN USES FOR THINGS //</span></div>
 <p class="readout" id="readout" aria-hidden="true">00 // ENTRY PROTOCOL</p>
 <div class="flight-crosshair" id="flightCrosshair" aria-hidden="true"></div>
-<p class="pan-status" id="panStatus" role="status" aria-live="polite">Camera pan armed · drag pointer · arrows nudge · Escape resets</p>
+<p class="pan-status" id="panStatus" role="status" aria-live="polite">360° orbit armed · drag pointer · arrows nudge · Escape resets</p>
 
 <main id="main">
 
@@ -2412,11 +2412,11 @@ const CHAPTERS = [
 const sections = $$('[data-cam]');
 const rig = {
   exact: 0, smooth: 0, active: -1, dir: 1,
-  anchors: [], px: 0, py: 0, pointX: 0, pointY: 0,
+  anchors: [], px: 0, py: 0, pointX: innerWidth / 2, pointY: innerHeight / 2,
   scrollVel: 0, lastY: 0, lastStamp: performance.now()
 };
-const cameraPan = {
-  x: 0, y: 0, targetX: 0, targetY: 0,
+const cameraOrbit = {
+  yaw: 0, pitch: 0, targetYaw: 0, targetPitch: 0,
   dragging: false, lastX: 0, lastY: 0, held: new Set()
 };
 
@@ -2428,6 +2428,8 @@ const camTgt = new THREE.Vector3();
 const camDir = new THREE.Vector3();
 const camSide = new THREE.Vector3();
 const camUp = new THREE.Vector3();
+const camOrbitOffset = new THREE.Vector3();
+const camOrbitSpherical = new THREE.Spherical();
 let curve = null, curveT = null, tall = false;
 
 function camFor(i) {
@@ -2549,7 +2551,10 @@ function applyWorldState(p) {
   post.mats.composite.uniforms.uAccent.value.copy(tmpColA).lerp(tmpColB, t);
   post.mats.composite.uniforms.uAccentMix.value = .055 + L('bloom') * .055;
 
-  /* camera: sampled from the authored curves, then offset by parallax */
+  /* Camera: sampled from the authored curves, then placed on a spherical
+     orbit around its authored target. Yaw is deliberately unbounded, so a
+     held-arrow drag can circle the world repeatedly instead of hitting a
+     lateral-pan wall. Pitch stops just before the poles to prevent flips. */
   const easedP = i + t;
   const u = easedP / (CHAPTERS.length - 1);
   curve.getPoint(clamp(u, 0, 1), camPos);
@@ -2572,10 +2577,14 @@ function applyWorldState(p) {
   world.camera.position.copy(camPos)
     .addScaledVector(camSide, rig.px * 5.2 * par)
     .addScaledVector(camUp, -rig.py * 3.4 * par)
-    .addScaledVector(camSide, cameraPan.x)
-    .addScaledVector(camUp, cameraPan.y)
     .addScaledVector(camSide, clamp(rig.scrollVel * 1.9, -4.5, 4.5));
-  camTgt.addScaledVector(camSide, cameraPan.x).addScaledVector(camUp, cameraPan.y);
+
+  camOrbitOffset.subVectors(world.camera.position, camTgt);
+  camOrbitSpherical.setFromVector3(camOrbitOffset);
+  camOrbitSpherical.theta += cameraOrbit.yaw;
+  camOrbitSpherical.phi = clamp(camOrbitSpherical.phi - cameraOrbit.pitch, .08, Math.PI - .08);
+  camOrbitOffset.setFromSpherical(camOrbitSpherical);
+  world.camera.position.copy(camTgt).add(camOrbitOffset);
   world.camera.lookAt(camTgt);
   world.camera.rotateZ(lerp(ma.roll, mb.roll, t) * travel + clamp(rig.scrollVel * .006, -.018, .018));
   if (Math.abs(world.camera.fov - fov) > 0.01) {
@@ -3706,7 +3715,7 @@ const entrySection = $('#entry'), flightToggle = $('#flightToggle'), flightHint 
 const flightCrosshair = $('#flightCrosshair');
 function setFlight(active) {
   flight.active = Boolean(active) && rig.active === 0;
-  if (flight.active) { cameraPan.held.clear(); stopCameraDrag(); }
+  if (flight.active) { cameraOrbit.held.clear(); stopCameraDrag(); }
   document.body.classList.toggle('flight-mode', flight.active);
   flightToggle.setAttribute('aria-pressed', String(flight.active));
   flightToggle.textContent = flight.active ? 'Release control' : 'Take control';
@@ -3745,52 +3754,62 @@ addEventListener('keyup', (e) => {
   if ((e.key === 'ArrowUp' && flight.keyY > 0) || (e.key === 'ArrowDown' && flight.keyY < 0)) flight.keyY = 0;
 });
 
-/* Hold any arrow key to arm viewport panning. The arrow nudges the camera;
-   dragging while it remains held gives direct two-axis control. Flight mode
-   keeps ownership of the same keys on page 00. */
+/* Hold any arrow key to arm a true spherical viewport orbit. Horizontal drag
+   has no stop and can circle the scene through 360 degrees; vertical drag is
+   pole-limited to keep the horizon controllable. Flight mode keeps ownership
+   of the same keys on page 00. */
 const panStatus = $('#panStatus');
 function updatePanStatus() {
-  panStatus.textContent = cameraPan.dragging
-    ? 'Camera panning · release pointer to settle view'
-    : 'Camera pan armed · drag pointer · arrows nudge · Escape resets';
+  const yaw = ((Math.round(cameraOrbit.targetYaw * 180 / Math.PI) % 360) + 360) % 360;
+  const pitch = Math.round(cameraOrbit.targetPitch * 180 / Math.PI);
+  panStatus.textContent = cameraOrbit.dragging
+    ? `Camera orbiting · yaw ${yaw}° · pitch ${pitch}°`
+    : '360° orbit armed · drag pointer · arrows nudge · Escape resets';
 }
 function stopCameraDrag() {
-  cameraPan.dragging = false;
+  cameraOrbit.dragging = false;
   document.body.classList.remove('camera-pan-dragging');
-  if (!cameraPan.held.size) document.body.classList.remove('camera-pan-armed');
+  if (!cameraOrbit.held.size) document.body.classList.remove('camera-pan-armed');
   updatePanStatus();
 }
 addEventListener('keydown', (e) => {
   if (flight.active || e.target.matches('input,textarea') || !e.key.startsWith('Arrow')) return;
-  cameraPan.held.add(e.key); document.body.classList.add('camera-pan-armed');
-  const nudge = e.repeat ? .45 : 1.1;
-  if (e.key === 'ArrowLeft') cameraPan.targetX -= nudge;
-  if (e.key === 'ArrowRight') cameraPan.targetX += nudge;
-  if (e.key === 'ArrowUp') cameraPan.targetY += nudge * .72;
-  if (e.key === 'ArrowDown') cameraPan.targetY -= nudge * .72;
-  cameraPan.targetX = clamp(cameraPan.targetX,-24,24); cameraPan.targetY = clamp(cameraPan.targetY,-14,14);
+  if (!cameraOrbit.held.size) { cameraOrbit.lastX = rig.pointX; cameraOrbit.lastY = rig.pointY; }
+  cameraOrbit.held.add(e.key); document.body.classList.add('camera-pan-armed');
+  const nudge = e.repeat ? .022 : .065;
+  if (e.key === 'ArrowLeft') cameraOrbit.targetYaw -= nudge;
+  if (e.key === 'ArrowRight') cameraOrbit.targetYaw += nudge;
+  if (e.key === 'ArrowUp') cameraOrbit.targetPitch += nudge;
+  if (e.key === 'ArrowDown') cameraOrbit.targetPitch -= nudge;
+  cameraOrbit.targetPitch = clamp(cameraOrbit.targetPitch, -1.34, 1.34);
   updatePanStatus(); e.preventDefault();
 });
 addEventListener('keyup', (e) => {
   if (!e.key.startsWith('Arrow')) return;
-  cameraPan.held.delete(e.key);
-  if (!cameraPan.held.size) stopCameraDrag();
+  cameraOrbit.held.delete(e.key);
+  if (!cameraOrbit.held.size) stopCameraDrag();
 });
 addEventListener('pointerdown', (e) => {
-  if (!cameraPan.held.size || flight.active || e.target.closest('a,button,input,label')) return;
-  cameraPan.dragging = true; cameraPan.lastX = e.clientX; cameraPan.lastY = e.clientY;
+  if (!cameraOrbit.held.size || flight.active || e.target.closest('a,button,input,label')) return;
+  cameraOrbit.dragging = true; cameraOrbit.lastX = e.clientX; cameraOrbit.lastY = e.clientY;
   document.body.classList.add('camera-pan-dragging'); updatePanStatus(); e.preventDefault();
 });
 addEventListener('pointermove', (e) => {
-  if (!cameraPan.dragging) return;
-  const dx=e.clientX-cameraPan.lastX,dy=e.clientY-cameraPan.lastY;cameraPan.lastX=e.clientX;cameraPan.lastY=e.clientY;
-  cameraPan.targetX=clamp(cameraPan.targetX+dx*.055,-24,24);cameraPan.targetY=clamp(cameraPan.targetY-dy*.045,-14,14);updatePanStatus();
+  if (!cameraOrbit.held.size || flight.active) return;
+  if (!cameraOrbit.dragging) {
+    cameraOrbit.dragging = true;
+    document.body.classList.add('camera-pan-dragging');
+  }
+  const dx=e.clientX-cameraOrbit.lastX,dy=e.clientY-cameraOrbit.lastY;cameraOrbit.lastX=e.clientX;cameraOrbit.lastY=e.clientY;
+  cameraOrbit.targetYaw += dx * .0085;
+  cameraOrbit.targetPitch = clamp(cameraOrbit.targetPitch - dy * .0048, -1.34, 1.34);
+  updatePanStatus();
 }, { passive:true });
-addEventListener('pointerup', stopCameraDrag, { passive:true });
+addEventListener('pointerup', () => { if (!cameraOrbit.held.size) stopCameraDrag(); }, { passive:true });
 addEventListener('pointercancel', stopCameraDrag, { passive:true });
 addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' || flight.active) return;
-  cameraPan.targetX = cameraPan.targetY = 0; cameraPan.held.clear(); stopCameraDrag();
+  cameraOrbit.targetYaw = cameraOrbit.targetPitch = 0; cameraOrbit.held.clear(); stopCameraDrag();
 });
 
 const navToggle = $('#navToggle'), acts = $('#acts');
@@ -3843,6 +3862,7 @@ const CHANNELS = [
   { title:'EXIT AULOS', suffix:'APPENDIX', meta:'PAGE 06 / LAST BREATH', desc:'descending reed · archive fade · open circuit', mode:'06' }
 ];
 let ac=null, master=null, analyser=null, noiseBuf=null, synthGain=null, uploadGain=null, uploadNode=null;
+let dataMistBuffer=null, dataMistLoad=null;
 let playing=false, timer=0, fadeTimer=0, pauseTimer=0, track=0, voices=[], scrollScoreStarted=false;
 let uploadMode=false, uploadUrl='', freqData=null;
 const uploadedAudio = new Audio(); uploadedAudio.loop = true; uploadedAudio.preload = 'metadata';
@@ -3868,7 +3888,17 @@ function initAudio(){
   master.connect(analyser); analyser.connect(ac.destination);
   noiseBuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate); const d=noiseBuf.getChannelData(0);
   for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  loadDataMistCue();
   freqData=new Uint8Array(analyser.frequencyBinCount); drawViz();
+}
+function loadDataMistCue(){
+  if(dataMistBuffer||dataMistLoad||!ac)return dataMistLoad;
+  dataMistLoad=fetch('/data-mist-passage.wav')
+    .then(r=>{if(!r.ok)throw new Error(`Data Mist ${r.status}`);return r.arrayBuffer();})
+    .then(bytes=>ac.decodeAudioData(bytes))
+    .then(buffer=>{dataMistBuffer=buffer;return buffer;})
+    .catch(()=>{dataMistLoad=null;return null;});
+  return dataMistLoad;
 }
 function hold(param,time,value=param.value){
   if(param.cancelAndHoldAtTime)param.cancelAndHoldAtTime(time); else{param.cancelScheduledValues(time);param.setValueAtTime(value,time);}
@@ -3888,16 +3918,15 @@ function sfxLaser(){
   f.type='bandpass';f.frequency.value=1100;f.Q.value=1.8;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.045,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+.2);
   o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+.22);
 }
-function sfxAulosSquish(direction=1){
-  if(!ac||!master||uploadMode)return;const t=ac.currentTime,bus=ac.createGain(),filter=ac.createBiquadFilter(),o=ac.createOscillator(),sub=ac.createOscillator(),ng=ac.createGain(),g=ac.createGain();
-  const hi=direction>0?360:118,lo=direction>0?82:410;o.type='sawtooth';o.frequency.setValueAtTime(hi,t);o.frequency.exponentialRampToValueAtTime(lo,t+.34);
-  sub.type='triangle';sub.frequency.setValueAtTime(hi*.5,t);sub.frequency.exponentialRampToValueAtTime(Math.max(42,lo*.5),t+.36);
-  filter.type='lowpass';filter.Q.value=10.5;filter.frequency.setValueAtTime(direction>0?2100:240,t);filter.frequency.exponentialRampToValueAtTime(direction>0?170:2300,t+.32);
-  const shaper=ac.createWaveShaper(),curve=new Float32Array(256);for(let i=0;i<curve.length;i++){const x=i/127.5-1;curve[i]=Math.tanh(x*3.4);}shaper.curve=curve;shaper.oversample='2x';
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.07,t+.025);g.gain.setValueAtTime(.052,t+.11);g.gain.exponentialRampToValueAtTime(.0001,t+.39);
-  const ns=ac.createBufferSource(),nf=ac.createBiquadFilter();ns.buffer=noiseBuf;nf.type='bandpass';nf.frequency.value=780;nf.Q.value=2.6;ng.gain.setValueAtTime(.0001,t);ng.gain.exponentialRampToValueAtTime(.018,t+.018);ng.gain.exponentialRampToValueAtTime(.0001,t+.2);
-  o.connect(filter);sub.connect(filter);filter.connect(shaper);shaper.connect(g);g.connect(bus);ns.connect(nf);nf.connect(ng);ng.connect(bus);bus.connect(master);
-  o.start(t);sub.start(t);ns.start(t);o.stop(t+.42);sub.stop(t+.42);ns.stop(t+.23);
+function sfxDataMist(direction=1){
+  if(!ac||!master||uploadMode)return;
+  if(!dataMistBuffer){loadDataMistCue()?.then(buffer=>{if(buffer)sfxDataMist(direction);});return;}
+  const t=ac.currentTime,source=ac.createBufferSource(),filter=ac.createBiquadFilter(),gain=ac.createGain();
+  source.buffer=dataMistBuffer;source.playbackRate.value=direction>0?1:.965;
+  filter.type='lowpass';filter.frequency.value=direction>0?3100:2450;filter.Q.value=.45;
+  gain.gain.setValueAtTime(.0001,t);gain.gain.linearRampToValueAtTime(.21,t+.10);
+  gain.gain.setValueAtTime(.19,t+Math.max(.12,dataMistBuffer.duration-.25));gain.gain.linearRampToValueAtTime(.0001,t+dataMistBuffer.duration);
+  source.connect(filter);filter.connect(gain);gain.connect(master);source.start(t);source.stop(t+dataMistBuffer.duration+.03);
 }
 addEventListener('pointerdown',ensureScrollScore,{once:true,passive:true});
 addEventListener('wheel',ensureScrollScore,{once:true,passive:true});
@@ -3942,7 +3971,7 @@ function leaveUpload(){
 }
 function fadeScoreTo(i,cue=false){
   const next=(i+CHANNELS.length)%CHANNELS.length;if(next===track&&!uploadMode){updateTrackUI();return;}initAudio();if(!ac)return;clearTimeout(pauseTimer);
-  if(cue&&playing&&!uploadMode)sfxAulosSquish(next>track?1:-1);
+  if(cue&&playing&&!uploadMode)sfxDataMist(next>track?1:-1);
   if(uploadMode){leaveUpload();track=next;stopVoices();const now=ac.currentTime;hold(synthGain.gain,now);synthGain.gain.setValueAtTime(.0001,now);schedule();synthGain.gain.linearRampToValueAtTime(1,now+.72);updateTrackUI();syncPlayUI();return;}
   if(!playing){track=next;updateTrackUI();syncPlayUI();return;}
   clearTimeout(fadeTimer);const now=ac.currentTime;hold(synthGain.gain,now);synthGain.gain.linearRampToValueAtTime(.0001,now+.34);
@@ -4104,8 +4133,8 @@ function tick(now) {
 
   rig.smooth = reduced ? rig.exact : damp(rig.smooth, rig.exact, 4.6, dt);
   rig.scrollVel = damp(rig.scrollVel, 0, 5.8, dt);
-  cameraPan.x = reduced ? cameraPan.targetX : damp(cameraPan.x,cameraPan.targetX,6.2,dt);
-  cameraPan.y = reduced ? cameraPan.targetY : damp(cameraPan.y,cameraPan.targetY,6.2,dt);
+  cameraOrbit.yaw = reduced ? cameraOrbit.targetYaw : damp(cameraOrbit.yaw,cameraOrbit.targetYaw,7.2,dt);
+  cameraOrbit.pitch = reduced ? cameraOrbit.targetPitch : damp(cameraOrbit.pitch,cameraOrbit.targetPitch,7.2,dt);
 
   if (world.ok) {
     const R = world.registry;

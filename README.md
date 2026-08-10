@@ -88,9 +88,9 @@ live in one ledger and are interpolated from the same progress value.
 - **Uploaded-audio halftone shadow** — local MP3/WAV playback reveals a second
   red print-dot shell around the construct. Bass changes dot size and surface
   displacement while the wire cage switches to responsive magenta.
-- **Squish transition cue** — page changes layer a short filtered reed/noise
-  compression gesture over the cross-fade, with pitch direction following the
-  reader’s scroll direction.
+- **Data Mist transition cue** — page changes layer the approved soft breath,
+  noise and distant-harmony WAV over the cross-fade. Reverse travel is subtly
+  darker and slower, without the earlier squish or impact character.
 
 ## Controls
 
@@ -102,8 +102,9 @@ live in one ledger and are interpolated from the same progress value.
   default opening remains clean HD
 - On page 00, double-click to take control, steer with pointer or arrow keys,
   click to fire, and press `Escape` to release the fighter
-- Outside flight mode, hold any arrow key and drag the pointer to pan the 3D
-  camera. Arrow keys nudge the offset; `Escape` smoothly resets the view
+- Outside flight mode, hold any arrow key and move or drag the pointer to orbit
+  the 3D camera. Horizontal motion circles the scene through 360°, vertical
+  motion tilts without flipping, and `Escape` smoothly restores the composition
 - **Auto drift** releases pointer parallax; **ICE layer** hardens the
   countermeasure; **Breach** fires a transport glitch
 - The Aulos score starts after the first scroll or gesture, follows the active
