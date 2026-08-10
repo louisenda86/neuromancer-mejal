@@ -5,7 +5,7 @@ One persistent Three.js world, seven authored camera movements, a playable
 space-fighter encounter, seven live-synthesised Aulos scores, and no runtime
 dependency on a third-party server.
 
-Private site: pending deployment
+GitHub Pages: <https://louisenda86.github.io/neuromancer-mejal/>
 
 Open `index.html` over HTTP (`npm start`) and scroll.
 

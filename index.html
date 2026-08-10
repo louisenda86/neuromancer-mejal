@@ -6,18 +6,18 @@
 <meta name="description" content="Neuromancer V2.3: a cover-chromatic 3D journey with soft Data Mist transitions, 360-degree camera orbit and uploaded-audio red halftone response.">
 <meta name="theme-color" content="#080b0d">
 <meta name="color-scheme" content="dark">
-<title>Neuromancer V2.3 // The Chromatic Sprawl</title>
+<title>neuromancer-mejal // The Chromatic Sprawl</title>
 <meta property="og:type" content="website">
-<meta property="og:title" content="Neuromancer V2.3 // The Chromatic Sprawl">
+<meta property="og:title" content="neuromancer-mejal // The Chromatic Sprawl">
 <meta property="og:description" content="Seven continuously transforming 3D chapters. One cover-chromatic journey through the matrix.">
-<meta property="og:image" content="/og.png">
+<meta property="og:image" content="https://louisenda86.github.io/neuromancer-mejal/public/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
 <meta property="og:image:alt" content="Neuromancer V2 title above a neon perspective grid and fragmented machine presence.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Neuromancer V2.3 // The Chromatic Sprawl">
+<meta name="twitter:title" content="neuromancer-mejal // The Chromatic Sprawl">
 <meta name="twitter:description" content="Seven continuously transforming 3D chapters. One cover-chromatic journey through the matrix.">
-<meta name="twitter:image" content="/og.png">
+<meta name="twitter:image" content="https://louisenda86.github.io/neuromancer-mejal/public/og.png">
 <link rel="stylesheet" href="./vendor/fonts.css">
 <link rel="preload" as="font" type="font/woff2" href="./vendor/space-grotesk-500.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="./vendor/dm-mono-400.woff2" crossorigin>
@@ -3893,7 +3893,7 @@ function initAudio(){
 }
 function loadDataMistCue(){
   if(dataMistBuffer||dataMistLoad||!ac)return dataMistLoad;
-  dataMistLoad=fetch('/data-mist-passage.wav')
+  dataMistLoad=fetch('public/data-mist-passage.wav')
     .then(r=>{if(!r.ok)throw new Error(`Data Mist ${r.status}`);return r.arrayBuffer();})
     .then(bytes=>ac.decodeAudioData(bytes))
     .then(buffer=>{dataMistBuffer=buffer;return buffer;})

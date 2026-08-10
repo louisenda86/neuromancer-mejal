@@ -110,8 +110,11 @@ export default {
       });
     }
 
-    if (url.pathname.startsWith("/") && Object.hasOwn(PUBLIC_ASSETS, url.pathname.slice(1))) {
-      const name = url.pathname.slice(1);
+    const publicName = url.pathname.startsWith("/public/")
+      ? url.pathname.slice("/public/".length)
+      : url.pathname.slice(1);
+    if (url.pathname.startsWith("/") && Object.hasOwn(PUBLIC_ASSETS, publicName)) {
+      const name = publicName;
       if (!decodedBinary.has(name)) decodedBinary.set(name, decodeBase64(PUBLIC_ASSETS[name]));
       return new Response(head ? null : decodedBinary.get(name), {
         status: 200,
