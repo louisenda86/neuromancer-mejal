@@ -5,6 +5,8 @@ One persistent Three.js world, seven authored camera movements, five
 live-synthesised transmissions, and no runtime dependency on a third-party
 server.
 
+Private site: https://neuromancer-chromatic-sprawl-v2.moailabs.chatgpt.site
+
 Open `index.html` over HTTP (`npm start`) and scroll.
 
 ## How it works
