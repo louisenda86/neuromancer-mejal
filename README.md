@@ -1,11 +1,11 @@
-# Neuromancer V2.2 // The Chromatic Sprawl
+# Neuromancer V2.3 // The Chromatic Sprawl
 
 A second-generation scroll-driven audiovisual field guide to *Neuromancer*.
 One persistent Three.js world, seven authored camera movements, a playable
 space-fighter encounter, seven live-synthesised Aulos scores, and no runtime
 dependency on a third-party server.
 
-Private site: https://neuromancer-chromatic-sprawl-v2.moailabs.chatgpt.site
+Private site: pending deployment
 
 Open `index.html` over HTTP (`npm start`) and scroll.
 
@@ -85,6 +85,12 @@ live in one ledger and are interpolated from the same progress value.
 - **Audio-reactive world** — bass, mid and high envelopes independently drive
   the matrix grid, motes, construct amplitude, practical lights, bloom and
   chromatic response for both the generated score and local music.
+- **Uploaded-audio halftone shadow** — local MP3/WAV playback reveals a second
+  red print-dot shell around the construct. Bass changes dot size and surface
+  displacement while the wire cage switches to responsive magenta.
+- **Squish transition cue** — page changes layer a short filtered reed/noise
+  compression gesture over the cross-fade, with pitch direction following the
+  reader’s scroll direction.
 
 ## Controls
 
@@ -96,6 +102,8 @@ live in one ledger and are interpolated from the same progress value.
   default opening remains clean HD
 - On page 00, double-click to take control, steer with pointer or arrow keys,
   click to fire, and press `Escape` to release the fighter
+- Outside flight mode, hold any arrow key and drag the pointer to pan the 3D
+  camera. Arrow keys nudge the offset; `Escape` smoothly resets the view
 - **Auto drift** releases pointer parallax; **ICE layer** hardens the
   countermeasure; **Breach** fires a transport glitch
 - The Aulos score starts after the first scroll or gesture, follows the active
@@ -166,4 +174,4 @@ shared frequency analyser.
 ---
 
 Independent editorial study, 2026. Not affiliated with the author or publisher.
-This page was built by MEJALISM CORP by louisendajapar™ · TM Registered.
+This page was built by MEJALISM CORP by louisendajapar™.

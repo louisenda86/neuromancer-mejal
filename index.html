@@ -3,22 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Neuromancer V2.2: a cover-chromatic 3D journey with liquid type, playable space combat, seven cross-fading Aulos scores and audio-reactive visuals.">
+<meta name="description" content="Neuromancer V2.3: a cover-chromatic 3D journey with squish Aulos transitions, drag-pannable cameras and uploaded-audio red halftone response.">
 <meta name="theme-color" content="#080b0d">
 <meta name="color-scheme" content="dark">
-<title>Neuromancer V2 // The Chromatic Sprawl</title>
+<title>Neuromancer V2.3 // The Chromatic Sprawl</title>
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://neuromancer-chromatic-sprawl-v2.moailabs.chatgpt.site">
-<meta property="og:title" content="Neuromancer V2 // The Chromatic Sprawl">
+<meta property="og:title" content="Neuromancer V2.3 // The Chromatic Sprawl">
 <meta property="og:description" content="Seven continuously transforming 3D chapters. One cover-chromatic journey through the matrix.">
-<meta property="og:image" content="https://neuromancer-chromatic-sprawl-v2.moailabs.chatgpt.site/og.png">
+<meta property="og:image" content="/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
 <meta property="og:image:alt" content="Neuromancer V2 title above a neon perspective grid and fragmented machine presence.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Neuromancer V2 // The Chromatic Sprawl">
+<meta name="twitter:title" content="Neuromancer V2.3 // The Chromatic Sprawl">
 <meta name="twitter:description" content="Seven continuously transforming 3D chapters. One cover-chromatic journey through the matrix.">
-<meta name="twitter:image" content="https://neuromancer-chromatic-sprawl-v2.moailabs.chatgpt.site/og.png">
+<meta name="twitter:image" content="/og.png">
 <link rel="stylesheet" href="./vendor/fonts.css">
 <link rel="preload" as="font" type="font/woff2" href="./vendor/space-grotesk-500.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="./vendor/dm-mono-400.woff2" crossorigin>
@@ -302,6 +301,14 @@ body.flight-mode .flight-hud button{background:var(--pink);border-color:var(--pi
 .flight-crosshair:after{top:50%;left:-8px;height:1px;width:58px}
 body.flight-mode .flight-crosshair{opacity:.82}
 body.flight-mode .cur,body.flight-mode .cur-ring{opacity:0!important}
+.pan-status{position:fixed;z-index:58;left:calc(var(--rail) + 22px);top:102px;margin:0;padding:8px 11px;
+  border:1px solid rgba(168,189,69,.38);background:rgba(5,9,11,.72);color:var(--green);
+  font-size:7px;letter-spacing:.16em;text-transform:uppercase;opacity:0;transform:translateY(-6px);
+  pointer-events:none;transition:.2s var(--ease);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+body.camera-pan-armed .pan-status{opacity:1;transform:none}
+body.camera-pan-dragging .pan-status{color:var(--pink);border-color:rgba(240,21,112,.5)}
+body.camera-pan-armed .cur-ring{width:44px;height:44px;border-radius:3px;border-color:var(--green)}
+body.camera-pan-dragging .cur-ring{width:58px;height:34px;border-color:var(--pink)}
 
 /* ── chapter plate (editorial card + decrypt field) */
 .plate{margin:0;position:relative;border:1px solid var(--line);background:rgba(6,8,10,.5);
@@ -462,6 +469,7 @@ body.flight-mode .cur,body.flight-mode .cur-ring{opacity:0!important}
   .sect{min-height:116svh}
   .hero{min-height:108svh}
   .flight-hud{left:var(--gut);right:var(--gut);bottom:130px;justify-content:space-between}
+  .pan-status{left:12px;top:94px}
 }
 @media (max-width:560px){
   .frame{inset:5px}
@@ -512,8 +520,8 @@ body.flight-mode .cur,body.flight-mode .cur-ring{opacity:0!important}
 <div class="cur" aria-hidden="true"></div><div class="cur-ring" aria-hidden="true"></div>
 
 <header class="mast">
-  <div class="brand"><strong>NM.84 / V2.2</strong> <span>/ The Chromatic Sprawl</span></div>
-  <div class="mast-mid"><span class="dot"></span>Connection stable // Ono-Sendai deck 01</div>
+  <div class="brand"><strong>NM.84 / V2.3</strong> <span>/ The Chromatic Sprawl</span></div>
+  <div class="mast-mid"><span class="dot"></span>Hold arrow + drag // camera pan</div>
   <nav class="acts" id="acts" aria-label="Environment controls">
     <button id="btnDrift" aria-pressed="true">Auto drift</button>
     <button id="btnIce" aria-pressed="false">ICE layer</button>
@@ -535,6 +543,7 @@ body.flight-mode .cur,body.flight-mode .cur-ring{opacity:0!important}
 <div class="ticker" aria-hidden="true"><span><b>NODE 0001:</b> CHIBA — NINSEI STRIP // <b>NODE 0019:</b> FREESIDE SPINDLE // ENCRYPTION HANDSHAKE ACCEPTED // WINTERMUTE TRACE DETECTED ON SECTOR 7 // NEUROMANCER ARCHIVE OPEN // SIMSTIM FEED NOMINAL // <b>REMEMBER:</b> THE STREET FINDS ITS OWN USES FOR THINGS //</span></div>
 <p class="readout" id="readout" aria-hidden="true">00 // ENTRY PROTOCOL</p>
 <div class="flight-crosshair" id="flightCrosshair" aria-hidden="true"></div>
+<p class="pan-status" id="panStatus" role="status" aria-live="polite">Camera pan armed · drag pointer · arrows nudge · Escape resets</p>
 
 <main id="main">
 
@@ -714,7 +723,7 @@ body.flight-mode .cur,body.flight-mode .cur-ring{opacity:0!important}
   <div><b>Method</b>One persistent WebGL world<br>Scroll is the only conductor</div>
   <div><b>Sound</b>Seven Aulos scores synthesised live.<br>Local MP3/WAV input stays on your device.</div>
   <div><b>Index</b><a href="#entry">Entry</a> · <a href="#matrix">Matrix</a> · <a href="#chiba">Chiba</a> · <a href="#run">Run</a> · <a href="#ghost">Ghosts</a> · <a href="#afterimage">Afterimage</a></div>
-  <div class="corp-credit">This page was built by <b>MEJALISM CORP</b> by louisendajapar™ · TM Registered</div>
+  <div class="corp-credit">This page was built by <b>MEJALISM CORP</b> by louisendajapar™</div>
 </footer>
 
 <div class="drawer" id="drawer" role="region" aria-label="Transmission channels">
@@ -1739,6 +1748,7 @@ function buildWorld() {
         uTime:  { value: 0 },
         uAmp:   { value: 1 },
         uPower: { value: 1 },
+        uAudio: { value: 0 },
         uCell:  { value: 3 },
         uSteps: { value: 4 },
         uDark:  { value: new THREE.Color(0x080c10) },
@@ -1750,7 +1760,7 @@ function buildWorld() {
     vertexShader: `
       #include <common>
       #include <fog_pars_vertex>
-      uniform float uTime, uAmp;
+      uniform float uTime, uAmp, uAudio;
       varying vec3 vN; varying vec3 vV; varying float vD;
       ${GLSL_HASH}
       /* three phase-shifted lobes: enough to look alive, cheap enough to be
@@ -1767,7 +1777,7 @@ function buildWorld() {
       vec3 displaced(vec3 p, float radius){
         vec3 dir = normalize(p);
         vec3 s = dir * radius;
-        return s + dir * lobes(s) * uAmp * 1.35;
+        return s + dir * lobes(s) * uAmp * (1.35 + uAudio * 1.15);
       }
       void main(){
         float radius = length(position);
@@ -1795,7 +1805,7 @@ function buildWorld() {
       #include <common>
       #include <fog_pars_fragment>
       ${GLSL_BAYER}
-      uniform float uTime, uCell, uSteps, uPower;
+      uniform float uTime, uCell, uSteps, uPower, uAudio;
       uniform vec3 uDark, uLight, uRim, uKeyDir;
       varying vec3 vN; varying vec3 vV; varying float vD;
       void main(){
@@ -1806,9 +1816,10 @@ function buildWorld() {
 
         /* quantise into hard bands, then let the ordered matrix decide which
            side of each band boundary a pixel falls on */
-        vec2 cell = floor(gl_FragCoord.xy / uCell);
+        float liveCell = max(1.5, uCell - uAudio * 1.1);
+        vec2 cell = floor(gl_FragCoord.xy / liveCell);
         float b = bayer4(cell);
-        float q = floor(lum * uSteps + b) / uSteps;
+        float q = floor((lum + uAudio * 0.08 * sin(uTime*5.0 + cell.y*.18)) * uSteps + b) / uSteps;
         q = clamp(q, 0.0, 1.0);
 
         /* uPower is the chapter's claim on it: a dim shape in the distance
@@ -1822,6 +1833,31 @@ function buildWorld() {
   const monolith = new THREE.Mesh(new THREE.IcosahedronGeometry(11, q.monolithDetail), monoMat);
   monolith.position.set(0, 27, -54);
   landmarks.add(monolith);
+  /* A second, slightly expanded shell is invisible during the generated
+     score. Local MP3/WAV playback reveals its red print-shadow dots; bass
+     expands the dot radius while the shared displaced mesh provides motion. */
+  const monoHalfMat = new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,side:THREE.FrontSide,fog:false,
+    uniforms:{uTime:{value:0},uAudio:{value:0},uBass:{value:0},uCol:{value:new THREE.Color(0xf01570)}},
+    vertexShader:`
+      uniform float uTime,uAudio,uBass;varying vec3 vN;varying vec3 vV;
+      void main(){
+        vec3 dir=normalize(position);float wave=sin(position.x*.68+uTime*1.4)*sin(position.y*.54-uTime*.9)+.45*sin(position.z*.83+uTime*1.7);
+        vec3 P=position+dir*wave*(.12+uBass*1.65)*uAudio;vN=normalize(normalMatrix*normal);
+        vec4 mv=modelViewMatrix*vec4(P,1.0);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;
+      }`,
+    fragmentShader:`
+      uniform float uTime,uAudio,uBass;uniform vec3 uCol;varying vec3 vN;varying vec3 vV;
+      void main(){
+        vec3 n=normalize(vN);float shade=1.0-max(dot(n,normalize(vec3(-.48,.7,.5))),0.0);float fres=pow(1.0-abs(dot(n,normalize(vV))),2.2);
+        float cell=mix(7.2,3.8,clamp(uAudio+uBass*.55,0.0,1.0));vec2 p=fract(gl_FragCoord.xy/cell)-.5;
+        float radius=.12+shade*.24+uBass*.13+.025*sin(uTime*7.0+gl_FragCoord.y*.07);
+        float dotMask=1.0-smoothstep(radius,radius+.055,length(p));float a=dotMask*(shade*.72+fres*.3)*uAudio*.92;
+        if(a<.012)discard;gl_FragColor=vec4(uCol*(1.0+uBass*.85),a);
+      }`
+  });
+  const monoHalftone = new THREE.Mesh(monolith.geometry,monoHalfMat);
+  monoHalftone.position.copy(monolith.position);monoHalftone.scale.setScalar(1.035);monoHalftone.renderOrder=3;landmarks.add(monoHalftone);
   const monoCage = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(16.5, 1)),
     new THREE.LineBasicMaterial({ color: 0xdcd8ca, transparent: true, opacity: 0.12, fog: true })
@@ -1829,6 +1865,7 @@ function buildWorld() {
   monoCage.position.copy(monolith.position);
   landmarks.add(monoCage);
   R.monolith = monolith; R.monoMat = monoMat; R.monoCage = monoCage;
+  R.monoHalftone = monoHalftone; R.monoHalfMat = monoHalfMat;
 
   /* ══════════════════════ Freeside spindle ═════════════════════════════ */
   const spindle = new THREE.Group();
@@ -2378,6 +2415,10 @@ const rig = {
   anchors: [], px: 0, py: 0, pointX: 0, pointY: 0,
   scrollVel: 0, lastY: 0, lastStamp: performance.now()
 };
+const cameraPan = {
+  x: 0, y: 0, targetX: 0, targetY: 0,
+  dragging: false, lastX: 0, lastY: 0, held: new Set()
+};
 
 /* ── camera rig ─────────────────────────────────────────────────────────
    pathRig holds the authored composition; pointer parallax is applied as a
@@ -2531,7 +2572,10 @@ function applyWorldState(p) {
   world.camera.position.copy(camPos)
     .addScaledVector(camSide, rig.px * 5.2 * par)
     .addScaledVector(camUp, -rig.py * 3.4 * par)
+    .addScaledVector(camSide, cameraPan.x)
+    .addScaledVector(camUp, cameraPan.y)
     .addScaledVector(camSide, clamp(rig.scrollVel * 1.9, -4.5, 4.5));
+  camTgt.addScaledVector(camSide, cameraPan.x).addScaledVector(camUp, cameraPan.y);
   world.camera.lookAt(camTgt);
   world.camera.rotateZ(lerp(ma.roll, mb.roll, t) * travel + clamp(rig.scrollVel * .006, -.018, .018));
   if (Math.abs(world.camera.fov - fov) > 0.01) {
@@ -3357,7 +3401,7 @@ function onChapter(i) {
   document.documentElement.style.setProperty('--accent', CHAPTERS[i].accent);
   ownForeground(i);
   if (i !== 0 && flight.active) setFlight(false);
-  if (playing && !uploadMode && i !== track) fadeScoreTo(i);
+  if (playing && !uploadMode && i !== track) fadeScoreTo(i,true);
 }
 
 /* word splitting — the accessible phrase is preserved on the element */
@@ -3662,6 +3706,7 @@ const entrySection = $('#entry'), flightToggle = $('#flightToggle'), flightHint 
 const flightCrosshair = $('#flightCrosshair');
 function setFlight(active) {
   flight.active = Boolean(active) && rig.active === 0;
+  if (flight.active) { cameraPan.held.clear(); stopCameraDrag(); }
   document.body.classList.toggle('flight-mode', flight.active);
   flightToggle.setAttribute('aria-pressed', String(flight.active));
   flightToggle.textContent = flight.active ? 'Release control' : 'Take control';
@@ -3698,6 +3743,54 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => {
   if ((e.key === 'ArrowLeft' && flight.keyX < 0) || (e.key === 'ArrowRight' && flight.keyX > 0)) flight.keyX = 0;
   if ((e.key === 'ArrowUp' && flight.keyY > 0) || (e.key === 'ArrowDown' && flight.keyY < 0)) flight.keyY = 0;
+});
+
+/* Hold any arrow key to arm viewport panning. The arrow nudges the camera;
+   dragging while it remains held gives direct two-axis control. Flight mode
+   keeps ownership of the same keys on page 00. */
+const panStatus = $('#panStatus');
+function updatePanStatus() {
+  panStatus.textContent = cameraPan.dragging
+    ? 'Camera panning · release pointer to settle view'
+    : 'Camera pan armed · drag pointer · arrows nudge · Escape resets';
+}
+function stopCameraDrag() {
+  cameraPan.dragging = false;
+  document.body.classList.remove('camera-pan-dragging');
+  if (!cameraPan.held.size) document.body.classList.remove('camera-pan-armed');
+  updatePanStatus();
+}
+addEventListener('keydown', (e) => {
+  if (flight.active || e.target.matches('input,textarea') || !e.key.startsWith('Arrow')) return;
+  cameraPan.held.add(e.key); document.body.classList.add('camera-pan-armed');
+  const nudge = e.repeat ? .45 : 1.1;
+  if (e.key === 'ArrowLeft') cameraPan.targetX -= nudge;
+  if (e.key === 'ArrowRight') cameraPan.targetX += nudge;
+  if (e.key === 'ArrowUp') cameraPan.targetY += nudge * .72;
+  if (e.key === 'ArrowDown') cameraPan.targetY -= nudge * .72;
+  cameraPan.targetX = clamp(cameraPan.targetX,-24,24); cameraPan.targetY = clamp(cameraPan.targetY,-14,14);
+  updatePanStatus(); e.preventDefault();
+});
+addEventListener('keyup', (e) => {
+  if (!e.key.startsWith('Arrow')) return;
+  cameraPan.held.delete(e.key);
+  if (!cameraPan.held.size) stopCameraDrag();
+});
+addEventListener('pointerdown', (e) => {
+  if (!cameraPan.held.size || flight.active || e.target.closest('a,button,input,label')) return;
+  cameraPan.dragging = true; cameraPan.lastX = e.clientX; cameraPan.lastY = e.clientY;
+  document.body.classList.add('camera-pan-dragging'); updatePanStatus(); e.preventDefault();
+});
+addEventListener('pointermove', (e) => {
+  if (!cameraPan.dragging) return;
+  const dx=e.clientX-cameraPan.lastX,dy=e.clientY-cameraPan.lastY;cameraPan.lastX=e.clientX;cameraPan.lastY=e.clientY;
+  cameraPan.targetX=clamp(cameraPan.targetX+dx*.055,-24,24);cameraPan.targetY=clamp(cameraPan.targetY-dy*.045,-14,14);updatePanStatus();
+}, { passive:true });
+addEventListener('pointerup', stopCameraDrag, { passive:true });
+addEventListener('pointercancel', stopCameraDrag, { passive:true });
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || flight.active) return;
+  cameraPan.targetX = cameraPan.targetY = 0; cameraPan.held.clear(); stopCameraDrag();
 });
 
 const navToggle = $('#navToggle'), acts = $('#acts');
@@ -3795,6 +3888,17 @@ function sfxLaser(){
   f.type='bandpass';f.frequency.value=1100;f.Q.value=1.8;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.045,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+.2);
   o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+.22);
 }
+function sfxAulosSquish(direction=1){
+  if(!ac||!master||uploadMode)return;const t=ac.currentTime,bus=ac.createGain(),filter=ac.createBiquadFilter(),o=ac.createOscillator(),sub=ac.createOscillator(),ng=ac.createGain(),g=ac.createGain();
+  const hi=direction>0?360:118,lo=direction>0?82:410;o.type='sawtooth';o.frequency.setValueAtTime(hi,t);o.frequency.exponentialRampToValueAtTime(lo,t+.34);
+  sub.type='triangle';sub.frequency.setValueAtTime(hi*.5,t);sub.frequency.exponentialRampToValueAtTime(Math.max(42,lo*.5),t+.36);
+  filter.type='lowpass';filter.Q.value=10.5;filter.frequency.setValueAtTime(direction>0?2100:240,t);filter.frequency.exponentialRampToValueAtTime(direction>0?170:2300,t+.32);
+  const shaper=ac.createWaveShaper(),curve=new Float32Array(256);for(let i=0;i<curve.length;i++){const x=i/127.5-1;curve[i]=Math.tanh(x*3.4);}shaper.curve=curve;shaper.oversample='2x';
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.07,t+.025);g.gain.setValueAtTime(.052,t+.11);g.gain.exponentialRampToValueAtTime(.0001,t+.39);
+  const ns=ac.createBufferSource(),nf=ac.createBiquadFilter();ns.buffer=noiseBuf;nf.type='bandpass';nf.frequency.value=780;nf.Q.value=2.6;ng.gain.setValueAtTime(.0001,t);ng.gain.exponentialRampToValueAtTime(.018,t+.018);ng.gain.exponentialRampToValueAtTime(.0001,t+.2);
+  o.connect(filter);sub.connect(filter);filter.connect(shaper);shaper.connect(g);g.connect(bus);ns.connect(nf);nf.connect(ng);ng.connect(bus);bus.connect(master);
+  o.start(t);sub.start(t);ns.start(t);o.stop(t+.42);sub.stop(t+.42);ns.stop(t+.23);
+}
 addEventListener('pointerdown',ensureScrollScore,{once:true,passive:true});
 addEventListener('wheel',ensureScrollScore,{once:true,passive:true});
 
@@ -3836,8 +3940,9 @@ function leaveUpload(){
   if(!uploadMode)return;uploadMode=false;document.body.classList.remove('audio-upload-mode');uploadedAudio.pause();
   if(ac){const now=ac.currentTime;hold(uploadGain.gain,now);uploadGain.gain.linearRampToValueAtTime(.0001,now+.28);}updateTrackUI();
 }
-function fadeScoreTo(i){
+function fadeScoreTo(i,cue=false){
   const next=(i+CHANNELS.length)%CHANNELS.length;if(next===track&&!uploadMode){updateTrackUI();return;}initAudio();if(!ac)return;clearTimeout(pauseTimer);
+  if(cue&&playing&&!uploadMode)sfxAulosSquish(next>track?1:-1);
   if(uploadMode){leaveUpload();track=next;stopVoices();const now=ac.currentTime;hold(synthGain.gain,now);synthGain.gain.setValueAtTime(.0001,now);schedule();synthGain.gain.linearRampToValueAtTime(1,now+.72);updateTrackUI();syncPlayUI();return;}
   if(!playing){track=next;updateTrackUI();syncPlayUI();return;}
   clearTimeout(fadeTimer);const now=ac.currentTime;hold(synthGain.gain,now);synthGain.gain.linearRampToValueAtTime(.0001,now+.34);
@@ -3999,6 +4104,8 @@ function tick(now) {
 
   rig.smooth = reduced ? rig.exact : damp(rig.smooth, rig.exact, 4.6, dt);
   rig.scrollVel = damp(rig.scrollVel, 0, 5.8, dt);
+  cameraPan.x = reduced ? cameraPan.targetX : damp(cameraPan.x,cameraPan.targetX,6.2,dt);
+  cameraPan.y = reduced ? cameraPan.targetY : damp(cameraPan.y,cameraPan.targetY,6.2,dt);
 
   if (world.ok) {
     const R = world.registry;
@@ -4028,8 +4135,17 @@ function tick(now) {
     post.mats.composite.uniforms.uAberr.value += reactive.high * .85;
     const corePulse = 1 + reactive.bass * .055;
     R.coreShell.scale.setScalar(corePulse); R.coreWire.scale.setScalar(corePulse * (1 + reactive.high * .018));
+    const uploadSignal = uploadMode && playing ? reactive.level : 0;
+    const uploadBass = uploadMode && playing ? reactive.bass : 0;
+    R.monoMat.uniforms.uAudio.value = damp(R.monoMat.uniforms.uAudio.value,uploadSignal,7.5,dt);
+    R.monoHalfMat.uniforms.uTime.value = t;
+    R.monoHalfMat.uniforms.uAudio.value = damp(R.monoHalfMat.uniforms.uAudio.value,uploadSignal,8.2,dt);
+    R.monoHalfMat.uniforms.uBass.value = damp(R.monoHalfMat.uniforms.uBass.value,uploadBass,7.4,dt);
+    R.monoCage.material.color.setHex(uploadSignal > .015 ? 0xf01570 : 0xdcd8ca);
+    R.monoCage.material.opacity += uploadSignal * .34;
 
     R.monolith.rotation.set(t * 0.045, t * 0.075, t * 0.02);
+    R.monoHalftone.rotation.copy(R.monolith.rotation);
     R.monoCage.rotation.set(-t * 0.03, t * 0.05, 0);
     R.coreShell.rotation.set(t * 0.06, t * 0.1, 0);
     R.coreWire.rotation.set(-t * 0.04, t * 0.08, t * 0.02);
