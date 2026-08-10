@@ -1,8 +1,8 @@
-# Neuromancer V2.1 // The Chromatic Sprawl
+# Neuromancer V2.2 // The Chromatic Sprawl
 
 A second-generation scroll-driven audiovisual field guide to *Neuromancer*.
 One persistent Three.js world, seven authored camera movements, a playable
-space-fighter encounter, five live-synthesised transmissions, and no runtime
+space-fighter encounter, seven live-synthesised Aulos scores, and no runtime
 dependency on a third-party server.
 
 Private site: https://neuromancer-chromatic-sprawl-v2.moailabs.chatgpt.site
@@ -35,9 +35,9 @@ dithered alpha-matte pass. Nothing visible in the experience is downloaded at
 runtime and nothing is placeholder art.
 
 **The palette comes from the supplied 1984 cover.** Typography, practical
-lights, holograms, chapter accents and post-process halation use cyan `#20a8d9`,
-process magenta `#f01570`, chalk white `#e0dfd9`, lavender gray `#6a6e8a`, and
-deep grid blue `#206e91` over charcoal `#080b0d`.
+lights, holograms, chapter accents and post-process halation use classic cyan
+blue `#20a8d9`, grid green `#a8bd45`, process magenta `#f01570`, chalk white
+`#e0dfd9`, and lavender gray `#6a6e8a` over charcoal `#080b0d`.
 
 **Chapters are data.** Camera position, target, FOV, mobile override, fog
 density and colour, key intensity, lattice, rain, motes, bloom and accent all
@@ -79,19 +79,27 @@ live in one ledger and are interpolated from the same progress value.
   remaps the interface and 3D exposure without rebuilding the world.
 - **Page 00 dogfight** — two procedural space fighters bank, chase, shoot and
   leave emissive laser trails. Take control with a double-click or the HUD.
+- **FIG.02—05 motion graphics** — transparent telemetry canvases add rain
+  scans, route pulses, a machine iris and orbital traces above the decrypted
+  chapter stills. Their energy follows the live audio analyser.
+- **Audio-reactive world** — bass, mid and high envelopes independently drive
+  the matrix grid, motes, construct amplitude, practical lights, bloom and
+  chromatic response for both the generated score and local music.
 
 ## Controls
 
-- Play with the transport, `Space` or `M`; channels with `1`–`5`
-- **Channels** lists all five sound worlds
+- Play with the transport, `Space` or `M`; chapter scores with `1`–`7`
+- **Scores** lists all seven cross-fading Aulos arrangements
+- **Load audio** accepts a local MP3 or WAV, routes it through the analyser and
+  keeps the file entirely on the device
 - **Grain**, **VHS** and **Light mode** are optional visual treatments; the
   default opening remains clean HD
 - On page 00, double-click to take control, steer with pointer or arrow keys,
   click to fire, and press `Escape` to release the fighter
 - **Auto drift** releases pointer parallax; **ICE layer** hardens the
   countermeasure; **Breach** fires a transport glitch
-- The Aulos score starts after the first scroll or gesture and follows scroll
-  momentum; volume and channel remain adjustable in the compact sound panel
+- The Aulos score starts after the first scroll or gesture, follows the active
+  page from 00–06, and cross-fades whenever the next page takes focus
 - Query the local ROM with `matrix`, `case`, `molly`, `aulos`, `ice`,
   `wintermute`, `chiba`, `straylight`, `help`
 
@@ -143,14 +151,17 @@ any composed frame without a screenshot.
 
 ## Sound
 
-Five channels, all generated live with the Web Audio API. No recorded or
-copyrighted music is used.
+Seven default scores are generated live with the Web Audio API; no recorded
+music ships with the site. User-selected MP3/WAV files play locally through a
+shared frequency analyser.
 
-1. **Aulos // Delphic Circuit** — paired synthetic reed pipes over a drone
-2. **Data Cathedral // 84** — glassy FM bells and slow arpeggiation
-3. **Black ICE // Countermeasure** — industrial pulse at 92 BPM
-4. **Cipher Monk // Zero Knowledge** — modem ghosts and coded polyrhythm
-5. **Chiba Rain // Night Market** — detuned noir pads and rain static
+1. **Entry Signal** — threshold drone and paired Dorian reeds
+2. **Lattice Aulos** — ascending glass-reed cells in nonspace
+3. **Ninsei Aulos** — wet breath, noir intervals and rain texture
+4. **Pursuit Aulos** — rapid split-tongue figures against a driven drone
+5. **Ghost Aulos** — phased polyreed lines and machine-response echoes
+6. **Orbital Aulos** — long breath, wide harmony and slow signal bloom
+7. **Exit Aulos** — a descending final breath into the appendix
 
 ---
 
