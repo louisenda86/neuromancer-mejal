@@ -1,0 +1,11 @@
+{
+  "name": "neuromancer-chromatic-sprawl-v2",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "build": "node scripts/check.mjs && node scripts/build.mjs"
+  }
+}

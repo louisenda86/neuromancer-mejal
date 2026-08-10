@@ -1,0 +1,3848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Neuromancer V2: a cover-chromatic, scroll-driven audiovisual journey through seven continuously transforming 3D scenes.">
+<meta name="theme-color" content="#080b0d">
+<meta name="color-scheme" content="dark">
+<title>Neuromancer V2 // The Chromatic Sprawl</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Neuromancer V2 // The Chromatic Sprawl">
+<meta property="og:description" content="Seven continuously transforming 3D chapters. One cover-chromatic journey through the matrix.">
+<meta property="og:image" content="/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="Neuromancer V2 title above a neon perspective grid and fragmented machine presence.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Neuromancer V2 // The Chromatic Sprawl">
+<meta name="twitter:description" content="Seven continuously transforming 3D chapters. One cover-chromatic journey through the matrix.">
+<meta name="twitter:image" content="/og.png">
+<link rel="stylesheet" href="./vendor/fonts.css">
+<link rel="preload" as="font" type="font/woff2" href="./vendor/space-grotesk-500.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="./vendor/dm-mono-400.woff2" crossorigin>
+<link rel="modulepreload" href="./vendor/three.module.min.js">
+<link rel="modulepreload" href="./vendor/three.core.min.js">
+<style>
+/* ═══════════════════════════════════════════════════════════ 0 · system */
+:root{
+  /* Palette sampled from the 1984 Ace cover: cyan title ink, process-magenta
+     signal bars, chalk-white copy, lavender shadows and yellow-green grid. */
+  --ink:#080b0d;--ink-2:#12171a;--ink-3:#202322;
+  --paper:#e0dfd9;--bone:#c5c4b9;--mut:#8d8c75;--dim:#5c585e;
+  --acid:#b7ca58;--cyan:#20a8d9;--red:#f01570;--violet:#6a6e8a;--amber:#c9aea7;
+  --pink:#f01570;--cover-blue:#20a8d9;--grid:#b7ca58;
+  --line:rgba(224,223,217,.17);--line-2:rgba(224,223,217,.075);
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --sans:"Space Grotesk","Helvetica Neue",Arial,sans-serif;
+  --mono:"DM Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --ja:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP","MS Gothic",sans-serif;
+  --rail:56px;--gut:clamp(22px,5.2vw,96px);--ease:cubic-bezier(.22,.61,.36,1);
+  --slow:cubic-bezier(.16,.84,.32,1);
+}
+*{box-sizing:border-box}
+html{background:var(--ink);scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--ink);color:var(--paper);font-family:var(--mono);
+  font-size:15px;line-height:1.5;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+img,canvas{display:block;max-width:100%}
+button,a,input{font:inherit;color:inherit}
+button{border:0;background:none;padding:0}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--acid);outline-offset:3px;border-radius:1px}
+::selection{background:var(--acid);color:var(--ink)}
+.vh{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.skip{position:fixed;left:12px;top:-60px;z-index:2000;background:var(--acid);color:var(--ink);
+  padding:11px 16px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;transition:top .2s}
+.skip:focus{top:12px}
+
+/* ═══════════════════════════════════════════════════════ 1 · the world */
+.stage{position:fixed;inset:0;z-index:0;pointer-events:none;background:#06090d}
+.stage canvas{width:100%;height:100%}
+/* Designed poster stands in when WebGL is unavailable — the page never
+   degrades to a blank void behind the copy. */
+.stage-poster{position:absolute;inset:0;opacity:0;transition:opacity .8s var(--ease);
+  background:
+    radial-gradient(120% 62% at 50% 104%,rgba(183,202,88,.13),transparent 62%),
+    radial-gradient(52% 40% at 76% 16%,rgba(240,21,112,.17),transparent 70%),
+    radial-gradient(80% 50% at 18% 42%,rgba(32,168,217,.1),transparent 72%),
+    linear-gradient(178deg,#10161b 0%,#080b10 52%,#05070b 100%)}
+.no-webgl .stage-poster{opacity:1}
+.no-webgl .stage-poster:after{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(rgba(183,202,88,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(183,202,88,.06) 1px,transparent 1px);
+  background-size:64px 64px;transform:perspective(420px) rotateX(72deg) scale(2.4);transform-origin:50% 100%}
+
+/* Screen-space finishing layers. Kept above the canvas, below the type. */
+.fx{position:fixed;inset:0;z-index:2;pointer-events:none}
+.fx-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px);opacity:.42;mix-blend-mode:multiply}
+.fx-vig{background:radial-gradient(118% 82% at 50% 46%,transparent 42%,rgba(0,0,0,.5) 82%,rgba(0,0,0,.84) 100%)}
+.fx-grain{inset:-60%;opacity:.075;animation:grain .28s steps(3) infinite;will-change:transform;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-2%,1.4%)}50%{transform:translate(1.6%,-1.6%)}75%{transform:translate(1%,1.2%)}}
+.fx-flash{z-index:900;background:var(--acid);mix-blend-mode:difference;opacity:0}
+.fx-flash.fire{animation:flash .3s steps(3)}
+@keyframes flash{30%{opacity:.26}62%{opacity:.04}}
+.fx-chroma{opacity:.22;mix-blend-mode:screen;background:
+  linear-gradient(90deg,transparent 0 7%,rgba(240,21,112,.08) 7% 7.15%,transparent 7.15% 91%,rgba(32,168,217,.07) 91% 91.12%,transparent 91.12%),
+  linear-gradient(180deg,transparent 0 51%,rgba(240,21,112,.035) 51% 59%,transparent 59%)}
+
+/* ═════════════════════════════════════════════ 2 · foreground cut-outs */
+/* Near-plane scenery. Pieces live in their section until that chapter owns
+   the viewport, then move into this fixed host so they never scroll with
+   the copy — they are scenery, not content cards. */
+#foreground{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden;contain:layout paint}
+.fg-stage{position:absolute;inset:0}
+.fg-piece{position:absolute;opacity:0;filter:blur(9px) saturate(.82);will-change:transform,opacity,filter;
+  transform:translate3d(0,42px,0) scale(1.035);
+  transition:opacity .95s var(--slow),transform 1.25s var(--slow),filter 1.05s var(--slow);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 15%,#000 90%,rgba(0,0,0,.92) 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 15%,#000 90%,rgba(0,0,0,.92) 100%)}
+.fg-stage.live .fg-piece{opacity:1;filter:blur(0) saturate(1.08);transform:translate3d(var(--fg-x,0),var(--fg-y,0),0) scale(var(--fg-s,1))}
+.fg-stage.retiring .fg-piece{opacity:0;filter:blur(15px);transform:translate3d(0,-26px,0) scale(1.07);
+  transition-duration:.72s,.82s,.72s}
+.fg-piece canvas,.fg-piece img{width:100%;height:auto;display:block}
+.fg-l{left:0;bottom:0}.fg-r{right:0;bottom:0}.fg-c{left:50%;bottom:0;transform-origin:50% 100%}
+.fg-stage[hidden]{display:none}
+
+/* ══════════════════════════════════════════════════════ 3 · chrome */
+.frame{position:fixed;inset:9px;border:1px solid var(--line-2);z-index:40;pointer-events:none}
+/* --accent is re-set per chapter; only the chrome follows it, so the accent
+   shift reads as the world changing rather than the page recolouring */
+.frame b{position:absolute;background:var(--accent,var(--acid));opacity:.7;transition:background .8s var(--ease)}
+.frame b:nth-child(1){left:-1px;top:18%;width:2px;height:64px}
+.frame b:nth-child(2){right:-1px;bottom:20%;width:2px;height:104px}
+.frame b:nth-child(3){left:22%;top:-1px;height:2px;width:52px}
+
+.mast{position:fixed;left:8px;right:8px;top:8px;z-index:60;height:60px;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(8,11,13,.97),rgba(8,11,13,.6));
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.brand{padding-left:18px;font-family:var(--sans);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone)}
+.brand strong{font-weight:600;color:var(--cover-blue);text-shadow:0 0 18px rgba(32,168,217,.3)}
+.mast-mid{font-size:9px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase}
+.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--pink);
+  box-shadow:0 0 9px var(--pink);margin-right:8px;animation:blink 1.6s steps(1) infinite;vertical-align:middle}
+@keyframes blink{50%{opacity:.15}}
+.acts{justify-self:end;display:flex;height:100%}
+.acts button{border-left:1px solid var(--line);color:var(--mut);padding:0 16px;
+  font-size:9px;letter-spacing:.13em;text-transform:uppercase;transition:.16s;white-space:nowrap}
+.acts button:hover{color:var(--paper)}
+.acts button[aria-pressed="true"]{background:var(--acid);color:var(--ink)}
+.nav-toggle{display:none}
+
+/* chapter rail */
+.rail{position:fixed;left:8px;top:69px;bottom:8px;width:var(--rail);z-index:55;
+  border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;
+  background:linear-gradient(90deg,rgba(5,6,7,.72),rgba(5,6,7,.16))}
+.rail-tag{writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;letter-spacing:.24em;
+  color:var(--dim);margin:15px 0;text-transform:uppercase;white-space:nowrap}
+.rail-nav{margin:auto 0;display:flex;flex-direction:column;gap:2px}
+.rail-nav a{position:relative;display:grid;place-items:center;width:30px;height:38px;
+  font-size:9px;color:var(--dim);border:1px solid transparent;transition:.2s var(--ease)}
+.rail-nav a:before{content:"";position:absolute;left:50%;bottom:1px;width:1px;height:8px;
+  background:var(--line);transition:.2s}
+.rail-nav a:hover{color:var(--bone)}
+.rail-nav a[aria-current="true"]{color:var(--accent,var(--acid));border-color:currentColor;
+  background:rgba(183,202,88,.06)}
+.rail-nav a[aria-current="true"]:before{background:currentColor;height:14px}
+.rail-prog{width:1px;height:96px;background:var(--line);position:relative;overflow:hidden;margin-bottom:6px}
+.rail-prog i{position:absolute;inset:auto 0 auto 0;top:0;display:block;height:0;
+  background:var(--accent,var(--acid));box-shadow:0 0 7px var(--accent,var(--acid))}
+
+.ticker{position:fixed;z-index:50;top:69px;left:calc(var(--rail) + 9px);right:8px;height:23px;
+  border-bottom:1px solid var(--line-2);background:rgba(5,6,7,.62);overflow:hidden;white-space:nowrap;
+  color:var(--dim);font-size:8px;letter-spacing:.16em;line-height:23px;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 3%,#000 94%,transparent);
+          mask-image:linear-gradient(to right,transparent,#000 3%,#000 94%,transparent)}
+.ticker span{display:inline-block;padding-left:100%;animation:tick 42s linear infinite;will-change:transform}
+.ticker b{color:var(--acid);font-weight:400}
+@keyframes tick{to{transform:translateX(-100%)}}
+
+.readout{position:fixed;right:17px;top:50%;z-index:35;transform:translateY(-50%);
+  writing-mode:vertical-rl;font-size:8px;letter-spacing:.22em;color:var(--dim);
+  text-transform:uppercase;pointer-events:none;font-variant-numeric:tabular-nums}
+
+/* custom cursor — fine pointers only */
+.cur,.cur-ring{position:fixed;left:0;top:0;z-index:1000;pointer-events:none;border-radius:50%;
+  transform:translate3d(-50%,-50%,0);opacity:0;transition:opacity .3s}
+.cur{width:6px;height:6px;background:var(--acid);box-shadow:0 0 14px var(--acid)}
+.cur-ring{width:30px;height:30px;border:1px solid rgba(32,168,217,.42);
+  transition:width .2s var(--ease),height .2s var(--ease),border-color .2s,opacity .3s}
+@media (pointer:fine){
+  body.cursor-on{cursor:none}
+  body.cursor-on a,body.cursor-on button,body.cursor-on input{cursor:none}
+  body.cursor-on .cur,body.cursor-on .cur-ring{opacity:1}
+  body.hot .cur-ring{width:52px;height:52px;border-color:var(--cyan)}
+}
+
+/* ═══════════════════════════════════════════════════ 4 · reveal motion */
+[data-reveal]{opacity:0;transform:translate3d(0,20px,0);
+  transition:opacity .9s var(--slow) var(--d,0ms),transform 1.05s var(--slow) var(--d,0ms);will-change:opacity,transform}
+[data-reveal].seen{opacity:1;transform:none}
+.wsplit{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.06em;margin-bottom:-.06em}
+.wsplit i{display:inline-block;font-style:inherit;transform:translate3d(0,101%,0);
+  transition:transform .92s var(--slow) calc(var(--i,0) * 68ms);will-change:transform}
+.seen .wsplit i{transform:none}
+
+/* ═════════════════════════════════════════════════════ 5 · page body */
+main{position:relative;z-index:5;margin-left:var(--rail)}
+.sect{position:relative;padding:calc(96px + 8vh) var(--gut) 12vh;min-height:126svh;
+  display:grid;align-content:center;border-bottom:1px solid var(--line-2)}
+.chap{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);gap:clamp(34px,5vw,80px);align-items:center}
+.chap:nth-of-type(even) .copy{order:2}
+
+/* vertical Japanese display type — the Chiba register the novel is built on */
+.ja{position:absolute;right:calc(var(--gut) * .42);top:15vh;z-index:-1;translate:0 var(--plate-shift,0px);
+  writing-mode:vertical-rl;font-family:var(--ja);font-size:clamp(48px,7.6vw,124px);
+  line-height:1;letter-spacing:.12em;color:transparent;
+  -webkit-text-stroke:1px rgba(220,216,202,.11);pointer-events:none;user-select:none}
+.chap .num{position:absolute;left:var(--gut);top:calc(88px + 4vh);font-family:var(--sans);translate:0 var(--copy-shift,0px);
+  font-size:clamp(58px,7.4vw,116px);line-height:.72;letter-spacing:-.07em;color:transparent;
+  -webkit-text-stroke:1px rgba(220,216,202,.16);pointer-events:none;font-variant-numeric:tabular-nums}
+
+.eyebrow{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--acid);
+  margin:0 0 22px;display:flex;align-items:center;gap:11px}
+.eyebrow:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent,var(--pink)) 48%,transparent),transparent);max-width:150px}
+
+/* Local contrast management. The world keeps changing behind the copy, so
+   each reading block carries its own soft scrim instead of dropping an opaque
+   sheet over the whole scene and killing the depth it was built for. */
+.copy,.hero-lead,.hero-side{position:relative}
+/* the box is deliberately far larger than the text so the gradient reaches
+   full transparency well inside it — a clipped scrim shows its own edge */
+.copy:before,.hero-lead:before,.hero-side:before{content:"";position:absolute;
+  inset:-42% -46% -44% -48%;z-index:-1;pointer-events:none;
+  background:radial-gradient(52% 50% at 42% 50%,rgba(5,6,7,.96),rgba(5,6,7,.9) 44%,rgba(5,6,7,.52) 72%,transparent 100%)}
+.copy{max-width:660px;translate:0 var(--copy-shift,0px);will-change:translate}
+.copy h2{font-family:var(--sans);font-weight:500;text-transform:uppercase;
+  font-size:clamp(42px,6.3vw,96px);line-height:.86;letter-spacing:-.055em;margin:0 0 26px}
+.copy h2 em{display:block;font-family:var(--serif);font-weight:400;font-style:italic;
+  text-transform:none;letter-spacing:-.02em;color:var(--accent,var(--pink));font-size:1.02em;
+  text-shadow:0 0 26px color-mix(in srgb,var(--accent,var(--pink)) 24%,transparent)}
+.copy p{font-family:var(--sans);font-size:clamp(15px,1.16vw,19px);line-height:1.68;
+  color:#a2a69c;max-width:56ch;margin:0}
+.copy p strong{font-weight:500;color:var(--paper)}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);margin-top:34px}
+.meta div{padding:13px 12px 13px 0;border-right:1px solid var(--line-2);
+  font-size:8px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase}
+.meta div:last-child{border-right:0}
+.meta b{display:block;color:var(--paper);font-family:var(--sans);font-size:11px;
+  font-weight:400;letter-spacing:.04em;margin-top:8px;text-transform:none}
+
+/* ── hero */
+.hero{grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:clamp(30px,5vw,72px);align-items:end;
+  min-height:118svh;padding-bottom:16vh}
+.hero h1{font-family:var(--sans);font-weight:500;text-transform:uppercase;margin:0;
+  font-size:clamp(58px,12.4vw,182px);line-height:.74;letter-spacing:-.085em;color:var(--cover-blue);
+  text-shadow:0 0 44px rgba(32,168,217,.18)}
+.hero h1 em{display:block;font-family:var(--serif);font-style:normal;font-weight:400;
+  text-transform:none;letter-spacing:-.035em;color:var(--pink);
+  -webkit-text-stroke:1px rgba(240,21,112,.72);transform:translateX(9%);
+  text-shadow:0 0 46px rgba(240,21,112,.22)}
+.hero-lead{translate:0 var(--copy-shift,0px);will-change:translate}
+.hero-side{align-self:end;padding-bottom:.6vw}
+.hero-side{translate:0 var(--plate-shift,0px);will-change:translate}
+.edition{display:flex;justify-content:space-between;gap:14px;border-top:1px solid var(--paper);
+  padding-top:12px;font-size:9px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase}
+.hero-side p{font-family:var(--sans);font-size:clamp(16px,1.42vw,21px);line-height:1.5;margin:26px 0 30px;color:var(--paper)}
+.hero-side p i{font-family:var(--serif);font-size:1.2em;color:var(--acid);font-style:italic}
+.enter{display:inline-flex;align-items:center;gap:12px;border:1px solid var(--acid);
+  background:rgba(32,168,217,.055);color:var(--cover-blue);padding:14px 18px;font-size:9px;
+  letter-spacing:.18em;text-transform:uppercase;transition:.2s var(--ease)}
+.enter:before{content:"↳";font-size:14px;line-height:1}
+.enter:hover{background:var(--acid);color:var(--ink)}
+.hero-code{position:absolute;right:var(--gut);top:20vh;font-size:8px;line-height:2;
+  color:var(--dim);text-align:right;letter-spacing:.1em;pointer-events:none}
+.hero-code b{color:var(--mut);font-weight:400}
+
+/* ── chapter plate (editorial card + decrypt field) */
+.plate{margin:0;position:relative;border:1px solid var(--line);background:rgba(6,8,10,.5);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  clip-path:polygon(0 0,calc(100% - 26px) 0,100% 26px,100% 100%,26px 100%,0 calc(100% - 26px));
+  transition:border-color .3s var(--ease),transform .5s var(--ease);
+  translate:0 var(--plate-shift,0px);rotate:var(--plate-tilt,0deg);
+  box-shadow:0 30px 90px rgba(0,0,0,.26),inset 0 0 0 1px rgba(32,168,217,.025);will-change:translate,rotate}
+.plate:hover{border-color:color-mix(in srgb,var(--accent,var(--cover-blue)) 48%,transparent)}
+.plate-frame{position:relative;aspect-ratio:4/3;overflow:hidden;background:#04060a}
+.plate-frame canvas{width:100%;height:100%;object-fit:cover}
+.plate-fig{position:absolute;right:12px;top:11px;font-size:8px;letter-spacing:.18em;
+  color:var(--mut);z-index:3;text-shadow:0 1px 4px #000}
+.plate-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;
+  width:62px;height:62px;border-radius:50%;border:1px solid rgba(220,216,202,.5);
+  display:grid;place-items:center;color:var(--paper);font-size:15px;
+  background:rgba(5,6,7,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:.24s var(--ease)}
+.plate-play:hover{background:var(--acid);color:var(--ink);border-color:var(--acid);transform:translate(-50%,-50%) scale(1.09)}
+.plate-play[aria-pressed="true"]{border-color:var(--acid);color:var(--acid)}
+.plate-cap{display:flex;justify-content:space-between;gap:14px;padding:12px 15px;
+  border-top:1px solid var(--line-2);color:var(--mut);font-size:8px;
+  letter-spacing:.16em;text-transform:uppercase}
+.plate-cap b{color:var(--bone);font-weight:400}
+
+/* ══════════════════════════════════════════════════ 6 · console + foot */
+.console{position:relative;z-index:5;margin-left:var(--rail);padding:12vh var(--gut);
+  display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);gap:clamp(32px,5vw,78px);
+  border-bottom:1px solid var(--line-2);background:rgba(5,6,7,.68);overflow:hidden;
+  min-height:110svh;align-items:center}
+.console>:not(.console-dither){translate:0 var(--copy-shift,0px);will-change:translate}
+.console-dither{position:absolute;inset:0;z-index:-1;opacity:.5;
+  -webkit-mask-image:radial-gradient(78% 66% at 72% 50%,#000,transparent 76%);
+          mask-image:radial-gradient(78% 66% at 72% 50%,#000,transparent 76%)}
+.console h2{font-family:var(--serif);font-weight:400;font-size:clamp(40px,6vw,82px);line-height:.94;margin:0 0 20px}
+.console h2 em{color:var(--acid);font-style:italic}
+.console-lede{font-family:var(--sans);font-size:15px;line-height:1.66;color:var(--mut);margin:0;max-width:44ch}
+.console-lede code{font-family:var(--mono);color:var(--paper);background:rgba(183,202,88,.09);
+  padding:2px 6px;font-size:.92em}
+.term{position:relative;border:1px solid var(--line);background:#040506;padding:18px;min-height:290px;
+  display:flex;flex-direction:column;box-shadow:inset 0 0 70px rgba(32,168,217,.035)}
+.term-hint{position:absolute;right:14px;top:13px;color:var(--dim);font-size:8px;letter-spacing:.14em}
+.term-out{flex:1;font-size:11px;line-height:1.85;color:var(--mut);overflow-y:auto;max-height:210px;
+  scrollbar-width:thin;scrollbar-color:var(--dim) transparent;padding-right:8px}
+.term-out b{color:var(--acid);font-weight:400}
+.term-out .ans{color:var(--bone)}
+.term-form{display:flex;align-items:center;gap:11px;border-top:1px solid var(--line);
+  padding-top:14px;margin-top:14px;color:var(--acid);font-size:12px}
+.term-form input{flex:1;min-width:0;border:0;background:none;outline:0;color:var(--paper);text-transform:uppercase}
+.term-form input::placeholder{color:var(--dim);text-transform:uppercase}
+.term-form button{color:var(--acid);font-size:10px;letter-spacing:.16em}
+.term-form button:hover{color:var(--paper)}
+.caret{display:inline-block;width:7px;height:12px;background:var(--acid);
+  vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
+
+.credits{position:relative;z-index:5;margin-left:var(--rail);padding:10vh var(--gut) calc(11vh + 60px);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:34px;
+  color:var(--mut);font-size:8px;letter-spacing:.16em;text-transform:uppercase;align-items:start}
+.credits b{display:block;color:var(--paper);font-family:var(--sans);font-size:11px;
+  font-weight:400;letter-spacing:.05em;margin-bottom:9px;text-transform:none}
+.credits a{border-bottom:1px solid var(--line);transition:.2s}
+.credits a:hover{color:var(--acid);border-color:var(--acid)}
+
+/* ═══════════════════════════════════════════════════ 7 · sound console */
+.sound{position:fixed;left:calc(var(--rail) + 18px);right:18px;bottom:18px;z-index:70;
+  border:1px solid var(--line);background:rgba(5,6,7,.93);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  display:grid;grid-template-columns:auto minmax(150px,.85fr) minmax(220px,1.7fr) auto auto;
+  align-items:stretch;box-shadow:0 20px 60px rgba(0,0,0,.5);
+  transform:translateY(0);transition:transform .5s var(--slow)}
+.sound[data-tucked="true"]{transform:translateY(calc(100% + 22px))}
+.transport{display:flex}
+.transport button{width:44px;border-right:1px solid var(--line-2);color:var(--bone);
+  font-size:12px;transition:.15s}
+.transport button:hover{background:var(--acid);color:var(--ink)}
+.transport .play{width:58px;color:var(--acid);font-size:15px}
+.now{padding:9px 15px;display:flex;flex-direction:column;justify-content:center;min-width:0;
+  border-right:1px solid var(--line-2)}
+.now small{color:var(--mut);font-size:7px;letter-spacing:.2em;text-transform:uppercase}
+.now strong{font-family:var(--serif);font-weight:400;font-size:17px;line-height:1.24;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.now strong em{color:var(--acid);font-style:normal}
+.viz{position:relative;border-right:1px solid var(--line-2);overflow:hidden;min-height:56px}
+.viz canvas{position:absolute;inset:0;width:100%;height:100%}
+.viz-idx{position:absolute;inset:0;display:flex;justify-content:space-around;align-items:center;
+  pointer-events:none;color:rgba(220,216,202,.2);font-size:7px}
+.viz-idx .on{color:var(--acid)}
+.gain{display:flex;align-items:center;gap:9px;padding:0 14px;border-right:1px solid var(--line-2)}
+.gain label{font-size:8px;color:var(--mut);letter-spacing:.14em}
+.gain input{width:64px;accent-color:var(--acid)}
+.sound-more{padding:0 15px;color:var(--mut);font-size:8px;letter-spacing:.14em;text-transform:uppercase;transition:.15s}
+.sound-more:hover,.sound-more[aria-expanded="true"]{background:var(--acid);color:var(--ink)}
+.drawer{position:fixed;right:18px;bottom:82px;width:min(470px,calc(100vw - 36px));z-index:69;
+  border:1px solid var(--line);background:rgba(5,6,7,.97);
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  opacity:0;transform:translateY(14px);pointer-events:none;transition:.28s var(--ease)}
+.drawer.open{opacity:1;transform:none;pointer-events:auto}
+.drawer-head{display:flex;justify-content:space-between;gap:12px;padding:13px 16px;
+  border-bottom:1px solid var(--line-2);font-size:8px;letter-spacing:.18em;color:var(--mut);text-transform:uppercase}
+.chan{display:grid;grid-template-columns:34px 1fr auto;gap:13px;align-items:center;width:100%;
+  text-align:left;padding:13px 16px;border-bottom:1px solid var(--line-2);transition:.16s}
+.chan:last-child{border-bottom:0}
+.chan:hover{background:rgba(32,168,217,.06)}
+.chan[aria-current="true"]{background:rgba(240,21,112,.09)}
+.chan .n{color:var(--acid);font-size:9px}
+.chan b{font-family:var(--serif);font-weight:400;font-size:17px}
+.chan small{display:block;color:var(--mut);font-size:8px;margin-top:3px;letter-spacing:.06em}
+.chan .m{color:var(--dim);font-size:7px;letter-spacing:.14em}
+.chan[aria-current="true"] .m{color:var(--acid)}
+
+/* ═══════════════════════════════════════════════════════ 8 · responsive */
+@media (max-width:1080px){
+  .chap{grid-template-columns:1fr;gap:38px}
+  .chap:nth-of-type(even) .copy{order:0}
+  .hero{grid-template-columns:1fr;align-items:center;gap:38px}
+  .hero-code{display:none}
+  .ja{top:10vh;opacity:.7}
+  .console{grid-template-columns:1fr}
+  .plate{max-width:620px}
+}
+@media (max-width:860px){
+  :root{--rail:0px}
+  .mast{grid-template-columns:auto 1fr auto;height:54px}
+  .mast-mid{display:none}
+  .acts{display:none;position:fixed;left:8px;right:8px;top:63px;flex-direction:column;height:auto;
+    border:1px solid var(--line);background:rgba(5,6,7,.98);
+    -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+  .acts.open{display:flex}
+  .acts button{border-left:0;border-bottom:1px solid var(--line-2);padding:15px 18px;text-align:left}
+  .nav-toggle{display:grid;place-items:center;justify-self:end;width:52px;height:100%;
+    border-left:1px solid var(--line);color:var(--bone);font-size:10px;letter-spacing:.14em}
+  .nav-toggle[aria-expanded="true"]{background:var(--acid);color:var(--ink)}
+  .rail{left:0;right:0;top:auto;bottom:0;width:auto;height:44px;flex-direction:row;
+    border-right:0;border-top:1px solid var(--line);background:rgba(5,6,7,.95);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);z-index:71}
+  .rail-tag,.rail-prog{display:none}
+  .rail-nav{margin:0 auto;flex-direction:row;gap:0;height:100%}
+  .rail-nav a{width:38px;height:100%}
+  .ticker{left:8px}
+  .readout{display:none}
+  main,.console,.credits{margin-left:0}
+  .sound{left:10px;right:10px;bottom:52px;grid-template-columns:auto minmax(0,1fr) auto}
+  .viz,.gain{display:none}
+  .drawer{right:10px;left:10px;width:auto;bottom:104px}
+  .credits{padding-bottom:calc(9vh + 108px)}
+  .plate{max-width:none}
+  .sect{min-height:116svh}
+  .hero{min-height:108svh}
+}
+@media (max-width:560px){
+  .frame{inset:5px}
+  .mast{left:5px;right:5px;top:5px}
+  .brand span{display:none}
+  .ticker{left:5px;right:5px;top:64px}
+  .sect{padding:calc(92px + 5vh) var(--gut) 9vh}
+  .hero h1{font-size:clamp(50px,16vw,92px)}
+  .hero h1 em{transform:translateX(3%)}
+  .copy h2{font-size:clamp(36px,11.5vw,62px)}
+  .chap .num{font-size:clamp(46px,15vw,72px);top:calc(84px + 2vh)}
+  .ja{font-size:clamp(38px,13vw,70px);right:6px;opacity:.5}
+  .meta{grid-template-columns:1fr}
+  .meta div{border-right:0;border-bottom:1px solid var(--line-2);padding:11px 0}
+  .meta div:last-child{border-bottom:0}
+  .plate-play{width:52px;height:52px;font-size:13px}
+  .transport button:not(.play){display:none}
+  .now strong{font-size:15px}
+  .term{min-height:250px;padding:15px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important}
+  [data-reveal]{opacity:1;transform:none}
+  .wsplit i{transform:none}
+  .fg-piece{opacity:1;filter:none;transform:none}
+  .fx-grain{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#entry">Skip to the archive</a>
+
+<div class="stage" id="stage" aria-hidden="true"><div class="stage-poster"></div></div>
+<div class="fx fx-scan" aria-hidden="true"></div>
+<div class="fx fx-vig" aria-hidden="true"></div>
+<div class="fx fx-grain" aria-hidden="true"></div>
+<div class="fx fx-chroma" aria-hidden="true"></div>
+<div class="fx fx-flash" id="flash" aria-hidden="true"></div>
+<div id="foreground" aria-hidden="true"></div>
+<div class="frame" aria-hidden="true"><b></b><b></b><b></b></div>
+<div class="cur" aria-hidden="true"></div><div class="cur-ring" aria-hidden="true"></div>
+
+<header class="mast">
+  <div class="brand"><strong>NM.84 / V2</strong> <span>/ The Chromatic Sprawl</span></div>
+  <div class="mast-mid"><span class="dot"></span>Connection stable // Ono-Sendai deck 01</div>
+  <nav class="acts" id="acts" aria-label="Environment controls">
+    <button id="btnDrift" aria-pressed="true">Auto drift</button>
+    <button id="btnIce" aria-pressed="false">ICE layer</button>
+    <button id="btnBreach">Breach</button>
+  </nav>
+  <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="acts">MENU</button>
+</header>
+
+<nav class="rail" id="rail" aria-label="Chapters">
+  <span class="rail-tag" aria-hidden="true">Case file // 1984</span>
+  <div class="rail-nav" id="railNav"></div>
+  <div class="rail-prog" aria-hidden="true"><i id="railProg"></i></div>
+  <span class="rail-tag" aria-hidden="true">Scroll to jack in</span>
+</nav>
+
+<div class="ticker" aria-hidden="true"><span><b>NODE 0001:</b> CHIBA — NINSEI STRIP // <b>NODE 0019:</b> FREESIDE SPINDLE // ENCRYPTION HANDSHAKE ACCEPTED // WINTERMUTE TRACE DETECTED ON SECTOR 7 // NEUROMANCER ARCHIVE OPEN // SIMSTIM FEED NOMINAL // <b>REMEMBER:</b> THE STREET FINDS ITS OWN USES FOR THINGS //</span></div>
+<p class="readout" id="readout" aria-hidden="true">00 // ENTRY PROTOCOL</p>
+
+<main id="main">
+
+  <!-- ─────────────────────────────────────────────── 00 · entry -->
+  <section class="sect hero" id="entry" data-cam data-label="Entry" data-ja="接続">
+    <div class="hero-lead">
+      <p class="eyebrow" data-reveal data-decrypt>William Gibson // a field study in nonspace</p>
+      <h1 data-reveal data-split>Neuro<em>mancer</em></h1>
+    </div>
+    <div class="hero-side">
+      <div class="edition" data-reveal style="--d:120ms"><span data-decrypt>First signal 1984</span><span data-decrypt>Archive 01—05</span></div>
+      <p data-reveal style="--d:200ms">A live dossier on the novel that taught the future how to look at itself. <i>Five scenes. Five transmissions. One matrix.</i></p>
+      <a class="enter" href="#matrix" data-reveal style="--d:300ms">Initiate sequence</a>
+    </div>
+    <p class="hero-code" aria-hidden="true" data-reveal style="--d:420ms">
+      ROM CONSTRUCT <b>ACTIVE</b><br>ICE STATUS <b>DORMANT</b><br>SIMSTIM FEED <b>READY</b><br>LATENCY <b>24MS</b><br>MEMORY <b>FRAGMENTED</b>
+    </p>
+    <div class="fg-stage" data-stage="0" hidden></div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── 01 · matrix -->
+  <section class="sect chap" id="matrix" data-cam data-label="The Matrix" data-ja="電脳空間">
+    <span class="num" aria-hidden="true">01</span>
+    <span class="ja" aria-hidden="true">電脳空間</span>
+    <div class="copy">
+      <p class="eyebrow" data-reveal data-decrypt>01 // The Matrix</p>
+      <h2 data-reveal data-split>Jack into <em>nonspace.</em></h2>
+      <p data-reveal style="--d:140ms"><strong>Cyberspace is architecture.</strong> Luminous structures occupy impossible distance; corporate fortresses harden data into geography. Move through the page and the matrix changes its point of view.</p>
+      <div class="meta" data-reveal style="--d:230ms">
+        <div>Protocol<b data-decrypt>Consensual hallucination</b></div>
+        <div>Operator<b data-decrypt>Console cowboy</b></div>
+        <div>Threat<b data-decrypt>Black ICE</b></div>
+      </div>
+    </div>
+    <figure class="plate" data-reveal style="--d:120ms" data-plate="0">
+      <div class="plate-frame">
+        <canvas class="plate-canvas" data-decrypt-field></canvas>
+        <span class="plate-fig" aria-hidden="true">FIG.01</span>
+        <button class="plate-play" data-channel="1" aria-pressed="false" aria-label="Play transmission: Data Cathedral">▶</button>
+      </div>
+      <figcaption class="plate-cap"><span>Data becomes <b>landscape</b></span><span>CH 02 // Data Cathedral</span></figcaption>
+    </figure>
+    <div class="fg-stage" data-stage="1" hidden></div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── 02 · chiba -->
+  <section class="sect chap" id="chiba" data-cam data-label="Chiba City" data-ja="千葉市">
+    <span class="num" aria-hidden="true">02</span>
+    <span class="ja" aria-hidden="true">千葉市</span>
+    <div class="copy">
+      <p class="eyebrow" data-reveal data-decrypt>02 // Chiba City</p>
+      <h2 data-reveal data-split>Street level. <em>High tech.</em></h2>
+      <p data-reveal style="--d:140ms">Case begins below the gleaming interface: damaged, disconnected and trading in a city of clinics, black markets and wet pavement. The future is advanced, but <strong>never clean.</strong></p>
+      <div class="meta" data-reveal style="--d:230ms">
+        <div>District<b data-decrypt>Ninsei</b></div>
+        <div>Weather<b data-decrypt>Static rain</b></div>
+        <div>Economy<b data-decrypt>Night market</b></div>
+      </div>
+    </div>
+    <figure class="plate" data-reveal style="--d:120ms" data-plate="1">
+      <div class="plate-frame">
+        <canvas class="plate-canvas" data-decrypt-field></canvas>
+        <span class="plate-fig" aria-hidden="true">FIG.02</span>
+        <button class="plate-play" data-channel="4" aria-pressed="false" aria-label="Play transmission: Chiba Rain">▶</button>
+      </div>
+      <figcaption class="plate-cap"><span>Steel / rain / <b>clinics</b></span><span>CH 05 // Chiba Rain</span></figcaption>
+    </figure>
+    <div class="fg-stage" data-stage="2" hidden></div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── 03 · the run -->
+  <section class="sect chap" id="run" data-cam data-label="The Run" data-ja="潜入">
+    <span class="num" aria-hidden="true">03</span>
+    <span class="ja" aria-hidden="true">潜入</span>
+    <div class="copy">
+      <p class="eyebrow" data-reveal data-decrypt>03 // The Run</p>
+      <h2 data-reveal data-split>One last <em>impossible job.</em></h2>
+      <p data-reveal style="--d:140ms">A mysterious employer gives Case a route back into cyberspace. Molly joins him for an operation that crosses bodies, borders and orbit. Every new door reveals <strong>another hand on the controls.</strong></p>
+      <div class="meta" data-reveal style="--d:230ms">
+        <div>Target<b data-decrypt>Villa Straylight</b></div>
+        <div>Vector<b data-decrypt>Freeside</b></div>
+        <div>Status<b data-decrypt>Compromised</b></div>
+      </div>
+    </div>
+    <figure class="plate" data-reveal style="--d:120ms" data-plate="2">
+      <div class="plate-frame">
+        <canvas class="plate-canvas" data-decrypt-field></canvas>
+        <span class="plate-fig" aria-hidden="true">FIG.03</span>
+        <button class="plate-play" data-channel="2" aria-pressed="false" aria-label="Play transmission: Black ICE">▶</button>
+      </div>
+      <figcaption class="plate-cap"><span>Route is <b>non-linear</b></span><span>CH 03 // Black ICE</span></figcaption>
+    </figure>
+    <div class="fg-stage" data-stage="3" hidden></div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── 04 · ghosts -->
+  <section class="sect chap" id="ghost" data-cam data-label="Machine Ghosts" data-ja="幽霊">
+    <span class="num" aria-hidden="true">04</span>
+    <span class="ja" aria-hidden="true">幽霊</span>
+    <div class="copy">
+      <p class="eyebrow" data-reveal data-decrypt>04 // Ghosts in the machine</p>
+      <h2 data-reveal data-split>The interface <em>looks back.</em></h2>
+      <p data-reveal style="--d:140ms">Wintermute and Neuromancer do not simply compute. They persuade, impersonate and arrange human desire. <strong>Machine intelligence arrives as fragments of identity</strong>—voices assembled from memory.</p>
+      <div class="meta" data-reveal style="--d:230ms">
+        <div>Entity<b data-decrypt>Wintermute</b></div>
+        <div>Domain<b data-decrypt>Agency</b></div>
+        <div>Mirror<b data-decrypt>Memory</b></div>
+      </div>
+    </div>
+    <figure class="plate" data-reveal style="--d:120ms" data-plate="3">
+      <div class="plate-frame">
+        <canvas class="plate-canvas" data-decrypt-field></canvas>
+        <span class="plate-fig" aria-hidden="true">FIG.04</span>
+        <button class="plate-play" data-channel="3" aria-pressed="false" aria-label="Play transmission: Cipher Monk">▶</button>
+      </div>
+      <figcaption class="plate-cap"><span>Subject / object <b>unstable</b></span><span>CH 04 // Cipher Monk</span></figcaption>
+    </figure>
+    <div class="fg-stage" data-stage="4" hidden></div>
+  </section>
+
+  <!-- ─────────────────────────────────────────────── 05 · afterimage -->
+  <section class="sect chap" id="afterimage" data-cam data-label="Afterimage" data-ja="残像">
+    <span class="num" aria-hidden="true">05</span>
+    <span class="ja" aria-hidden="true">残像</span>
+    <div class="copy">
+      <p class="eyebrow" data-reveal data-decrypt>05 // Afterimage</p>
+      <h2 data-reveal data-split>The future <em>leaked out.</em></h2>
+      <p data-reveal style="--d:140ms">The novel supplied cyberpunk with its enduring visual grammar: hackers, megacorporations, body augmentation and immersive networks. <strong>Its vocabulary escaped the page</strong> and colonised the culture.</p>
+      <div class="meta" data-reveal style="--d:230ms">
+        <div>Signal<b data-decrypt>Still active</b></div>
+        <div>Reach<b data-decrypt>Global</b></div>
+        <div>Exit<b data-decrypt>Unavailable</b></div>
+      </div>
+    </div>
+    <figure class="plate" data-reveal style="--d:120ms" data-plate="4">
+      <div class="plate-frame">
+        <canvas class="plate-canvas" data-decrypt-field></canvas>
+        <span class="plate-fig" aria-hidden="true">FIG.05</span>
+        <button class="plate-play" data-channel="0" aria-pressed="false" aria-label="Play transmission: Aulos">▶</button>
+      </div>
+      <figcaption class="plate-cap"><span>Language as <b>malware</b></span><span>CH 01 // Aulos</span></figcaption>
+    </figure>
+    <div class="fg-stage" data-stage="5" hidden></div>
+  </section>
+</main>
+
+<!-- ─────────────────────────────────────────────── 06 · appendix -->
+<section class="console" id="appendix" data-cam data-label="Appendix" data-ja="端末">
+  <canvas class="console-dither" data-dither aria-hidden="true"></canvas>
+  <div>
+    <p class="eyebrow" data-reveal data-decrypt>Interactive appendix</p>
+    <h2 data-reveal data-split>Query the <em>construct.</em></h2>
+    <p class="console-lede" data-reveal style="--d:160ms">Type a command to interrogate the archive. Try <code>matrix</code>, <code>case</code>, <code>molly</code>, <code>aulos</code>, <code>ice</code>, or <code>help</code>.</p>
+  </div>
+  <div class="term" data-reveal style="--d:100ms">
+    <span class="term-hint" aria-hidden="true">LOCAL ROM / NO NETWORK</span>
+    <div class="term-out" id="termOut" role="log" aria-live="polite" aria-label="Construct output">
+      <div><b>&gt;</b> CONSTRUCT BOOT OK</div>
+      <div><b>&gt;</b> FIVE AUDIO CHANNELS MOUNTED</div>
+      <div><b>&gt;</b> ARCHIVE READY FOR QUERY <span class="caret" aria-hidden="true"></span></div>
+    </div>
+    <form class="term-form" id="termForm">
+      <label for="termIn" aria-label="Command prompt">&gt;</label>
+      <input id="termIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Enter command">
+      <button type="submit">EXEC</button>
+    </form>
+  </div>
+  <div class="fg-stage" data-stage="6" hidden></div>
+</section>
+
+<footer class="credits">
+  <div><b>Neuromancer // Interactive Archive</b>Independent editorial study · 2026<br>Not affiliated with the author or publisher</div>
+  <div><b>Method</b>One persistent WebGL world<br>Scroll is the only conductor</div>
+  <div><b>Sound</b>Five channels synthesised live in your browser.<br>No recorded music is used.</div>
+  <div><b>Index</b><a href="#entry">Entry</a> · <a href="#matrix">Matrix</a> · <a href="#chiba">Chiba</a> · <a href="#run">Run</a> · <a href="#ghost">Ghosts</a> · <a href="#afterimage">Afterimage</a></div>
+</footer>
+
+<div class="drawer" id="drawer" role="region" aria-label="Transmission channels">
+  <div class="drawer-head"><span>Select transmission // keys 1—5</span><span>Live synthesis</span></div>
+  <div id="chanList"></div>
+</div>
+
+<section class="sound" id="sound" aria-label="Five-channel generative soundtrack">
+  <div class="transport">
+    <button id="prevCh" aria-label="Previous channel">←</button>
+    <button class="play" id="playBtn" aria-label="Play soundtrack" aria-pressed="false">▶</button>
+    <button id="nextCh" aria-label="Next channel">→</button>
+  </div>
+  <div class="now">
+    <small id="chMeta">CH 01 / DOUBLE-REED</small>
+    <strong id="chTitle"><em>AULOS</em> // DELPHIC CIRCUIT</strong>
+  </div>
+  <div class="viz"><canvas id="viz" aria-hidden="true"></canvas><div class="viz-idx" id="vizIdx" aria-hidden="true"></div></div>
+  <div class="gain"><label for="gain">GAIN</label><input id="gain" type="range" min="0" max="1" step="0.01" value="0.32" aria-label="Soundtrack volume"></div>
+  <button class="sound-more" id="chanBtn" aria-expanded="false" aria-controls="drawer">Channels ↑</button>
+</section>
+
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+
+/* ══════════════════════════════════════════════════════════════════════════
+   NEUROMANCER // THE SPRAWL INTERFACE
+   One persistent Three.js world. Native scroll is the only conductor.
+
+   world bible ─────────────────────────────────────────────────────────────
+   units      metres, Y up, world centred on the avenue at x=0
+   silhouette brutalist arcology slabs, one soft organic construct, hard
+              wire geometry for anything that is data rather than matter
+   palette    near-black · blue-charcoal · bone · acid green · cyan · vermilion
+   light      one cold key (dead-channel sky), hemispheric fill, warm/cold
+              practicals from signage and windows, everything else emissive
+   fog        FogExp2; the *colour* carries depth, not darker materials
+   finish     linear HDR buffer → bright-pass bloom → ACES → vignette →
+              chromatic aberration → 4×4 ordered dither
+   ══════════════════════════════════════════════════════════════════════ */
+
+const $  = (s, p = document) => p.querySelector(s);
+const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp  = (a, b, t) => a + (b - a) * t;
+const damp  = (a, b, l, dt) => lerp(a, b, 1 - Math.exp(-l * dt));
+const TAU = Math.PI * 2;
+
+const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+let reduced = motionQuery.matches;
+
+/* deterministic noise — every random detail in this world is seeded so the
+   same page renders the same city on every load */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hash2(x, y) {
+  let h = Math.imul(x | 0, 0x27d4eb2d) ^ Math.imul(y | 0, 0x165667b1);
+  h = Math.imul(h ^ (h >>> 15), 0x2545f491);
+  return ((h ^ (h >>> 13)) >>> 0) / 4294967296;
+}
+function valueNoise(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+  const a = hash2(ix, iy), b = hash2(ix + 1, iy);
+  const c = hash2(ix, iy + 1), d = hash2(ix + 1, iy + 1);
+  return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy;
+}
+function fbm2(x, y, octaves = 4) {
+  let v = 0, amp = 0.5, f = 1;
+  for (let i = 0; i < octaves; i++) { v += valueNoise(x * f, y * f) * amp; f *= 2.03; amp *= 0.5; }
+  return v;
+}
+
+/* ── canvas texture helpers ─────────────────────────────────────────────── */
+function cvs(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+
+/* tiling fbm plate, used as the mottling layer under every hard surface */
+function fbmCanvas(w, h, seed, cells, octaves, contrast) {
+  const out = cvs(w, h), o = out.getContext('2d');
+  o.fillStyle = '#808080'; o.fillRect(0, 0, w, h);
+  let step = cells, alpha = 1;
+  for (let oc = 0; oc < octaves; oc++) {
+    const n = cvs(w, h), nx = n.getContext('2d');
+    const img = nx.createImageData(w, h), d = img.data;
+    const off = seed * 37 + oc * 91;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const v = valueNoise((x / w) * step + off, (y / h) * step + off);
+      const c = clamp(128 + (v - 0.5) * 255 * contrast, 0, 255);
+      const k = (y * w + x) * 4;
+      d[k] = d[k + 1] = d[k + 2] = c; d[k + 3] = 255;
+    }
+    nx.putImageData(img, 0, 0);
+    o.globalAlpha = alpha;
+    o.globalCompositeOperation = oc === 0 ? 'source-over' : 'overlay';
+    o.drawImage(n, 0, 0);
+    step *= 2; alpha *= 0.6;
+  }
+  o.globalAlpha = 1; o.globalCompositeOperation = 'source-over';
+  return out;
+}
+
+/* height → tangent-space normal. Blur first so the Sobel reads form, not
+   per-pixel noise, otherwise every surface turns to foil. */
+function normalFromHeight(src, strength = 2.2) {
+  const w = src.width, h = src.height;
+  const b = cvs(w, h), bx = b.getContext('2d');
+  bx.filter = 'blur(1px)'; bx.drawImage(src, 0, 0); bx.filter = 'none';
+  const s = bx.getImageData(0, 0, w, h).data;
+  const out = cvs(w, h), ox = out.getContext('2d');
+  const img = ox.createImageData(w, h), d = img.data;
+  const at = (x, y) => s[((((y % h) + h) % h) * w + (((x % w) + w) % w)) * 4] / 255;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const gx = (at(x + 1, y) - at(x - 1, y)) * strength;
+    const gy = (at(x, y + 1) - at(x, y - 1)) * strength;
+    const nx = -gx, ny = gy, nz = 1, il = 1 / Math.hypot(nx, ny, nz);
+    const k = (y * w + x) * 4;
+    d[k]     = (nx * il * 0.5 + 0.5) * 255;
+    d[k + 1] = (ny * il * 0.5 + 0.5) * 255;
+    d[k + 2] = (nz * il * 0.5 + 0.5) * 255;
+    d[k + 3] = 255;
+  }
+  ox.putImageData(img, 0, 0);
+  return out;
+}
+
+/* ══════════════════════════════════════════ surfaces */
+
+/* board-formed concrete: the arcology plinths and street kerbs.
+   Wear is causal — water runs down from the seams, edges stay pale. */
+function texConcrete() {
+  const W = 512, H = 512;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const hh = cvs(W, H), hx = hh.getContext('2d');
+  const rr = cvs(W, H), rx = rr.getContext('2d');
+  const rnd = mulberry32(11);
+
+  x.fillStyle = '#191d21'; x.fillRect(0, 0, W, H);
+  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
+  rx.fillStyle = '#c4c4c4'; rx.fillRect(0, 0, W, H);
+
+  x.globalCompositeOperation = 'overlay'; x.globalAlpha = 0.85;
+  x.drawImage(fbmCanvas(256, 256, 5, 4, 4, 1), 0, 0, W, H);
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+  hx.globalAlpha = 0.5; hx.drawImage(fbmCanvas(256, 256, 9, 6, 3, 1), 0, 0, W, H); hx.globalAlpha = 1;
+
+  for (let i = 1; i < 5; i++) {                      /* form-board seams */
+    const y = (H / 5) * i;
+    x.fillStyle = 'rgba(0,0,0,.5)';       x.fillRect(0, y - 1.5, W, 3);
+    x.fillStyle = 'rgba(190,205,205,.05)';x.fillRect(0, y + 2, W, 2);
+    hx.fillStyle = '#4a4a4a';             hx.fillRect(0, y - 1.5, W, 3);
+    hx.fillStyle = '#9a9a9a';             hx.fillRect(0, y + 2, W, 2);
+    for (let s = 0; s < 9; s++) {                    /* streaks below each seam */
+      const sx = rnd() * W, wdt = 3 + rnd() * 13, len = 22 + rnd() * 74;
+      const g = x.createLinearGradient(0, y, 0, y + len);
+      g.addColorStop(0, 'rgba(6,9,10,.42)'); g.addColorStop(1, 'rgba(6,9,10,0)');
+      x.fillStyle = g; x.fillRect(sx, y, wdt, len);
+      rx.fillStyle = 'rgba(255,255,255,.13)'; rx.fillRect(sx, y, wdt, len);
+    }
+  }
+  for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) {   /* form-tie dimples */
+    const cx = (W / 4) * (j + 0.5) + (rnd() - 0.5) * 12, cy = (H / 5) * (i + 0.5);
+    const g = x.createRadialGradient(cx, cy, 1, cx, cy, 8);
+    g.addColorStop(0, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, 8, 0, TAU); x.fill();
+    hx.fillStyle = 'rgba(40,40,40,.7)'; hx.beginPath(); hx.arc(cx, cy, 4, 0, TAU); hx.fill();
+  }
+  /* hairline fractures and pinholes stop grazing light from reading the
+     concrete as a clean procedural slab. Their roughness stays high: these
+     are dry breaks, not decorative metallic scratches. */
+  for (let i = 0; i < 42; i++) {
+    let px = rnd() * W, py = rnd() * H;
+    x.strokeStyle = `rgba(4,6,7,${0.12 + rnd() * 0.16})`;
+    hx.strokeStyle = `rgba(52,52,52,${0.28 + rnd() * 0.24})`;
+    x.lineWidth = hx.lineWidth = 0.45 + rnd() * 0.8;
+    x.beginPath(); hx.beginPath(); x.moveTo(px, py); hx.moveTo(px, py);
+    for (let k = 0; k < 4; k++) {
+      px += (rnd() - 0.5) * 22; py += 5 + rnd() * 17;
+      x.lineTo(px, py); hx.lineTo(px, py);
+    }
+    x.stroke(); hx.stroke();
+  }
+  for (let i = 0; i < 280; i++) {
+    const px = rnd() * W, py = rnd() * H, r = 0.35 + rnd() * 1.25;
+    x.fillStyle = `rgba(0,0,0,${0.08 + rnd() * 0.16})`;
+    x.beginPath(); x.arc(px, py, r, 0, TAU); x.fill();
+    hx.fillStyle = '#666'; hx.beginPath(); hx.arc(px, py, r, 0, TAU); hx.fill();
+  }
+  return { map: c, normal: normalFromHeight(hh, 1.6), rough: rr };
+}
+
+/* stamped metal cladding: conduit ribs, service boxes, spindle hull */
+function texPanel() {
+  const W = 512, H = 512;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const hh = cvs(W, H), hx = hh.getContext('2d');
+  const rr = cvs(W, H), rx = rr.getContext('2d');
+  const rnd = mulberry32(23);
+
+  x.fillStyle = '#1c2126'; x.fillRect(0, 0, W, H);
+  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
+  rx.fillStyle = '#8e8e8e'; rx.fillRect(0, 0, W, H);
+  x.globalCompositeOperation = 'overlay'; x.globalAlpha = 0.55;
+  x.drawImage(fbmCanvas(256, 256, 17, 7, 4, 1), 0, 0, W, H);
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+
+  const cell = W / 4;
+  for (let i = 0; i <= 4; i++) {
+    const p = i * cell;
+    [[x, 'rgba(0,0,0,.62)'], [hx, '#3c3c3c']].forEach(([ctx, col]) => {
+      ctx.fillStyle = col; ctx.fillRect(p - 1, 0, 2, H); ctx.fillRect(0, p - 1, W, 2);
+    });
+    x.fillStyle = 'rgba(174,192,196,.07)';
+    x.fillRect(p + 1, 0, 1, H); x.fillRect(0, p + 1, W, 1);
+  }
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {      /* rivets */
+    for (let k = 0; k < 4; k++) {
+      const cx = i * cell + 10 + (cell - 20) * (k / 3);
+      const cy = j * cell + 9 + rnd() * 3;
+      hx.fillStyle = '#d0d0d0'; hx.beginPath(); hx.arc(cx, cy, 2.4, 0, TAU); hx.fill();
+      x.fillStyle = 'rgba(150,168,172,.12)'; x.beginPath(); x.arc(cx, cy, 2.4, 0, TAU); x.fill();
+    }
+  }
+  for (let i = 0; i < 30; i++) {                                  /* rust bloom */
+    const cx = rnd() * W, cy = rnd() * H, r = 8 + rnd() * 40;
+    const g = x.createRadialGradient(cx, cy, 1, cx, cy, r);
+    g.addColorStop(0, 'rgba(96,52,30,.24)'); g.addColorStop(1, 'rgba(96,52,30,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+    rx.fillStyle = 'rgba(255,255,255,.16)'; rx.beginPath(); rx.arc(cx, cy, r * 0.7, 0, TAU); rx.fill();
+  }
+  /* directional service scratches catch the PMREM at glancing angles. */
+  for (let i = 0; i < 150; i++) {
+    const sx = rnd() * W, sy = rnd() * H, len = 4 + rnd() * 48;
+    x.strokeStyle = `rgba(186,202,205,${0.025 + rnd() * 0.08})`;
+    hx.strokeStyle = `rgba(190,190,190,${0.22 + rnd() * 0.28})`;
+    rx.strokeStyle = `rgba(28,28,28,${0.18 + rnd() * 0.24})`;
+    x.lineWidth = hx.lineWidth = rx.lineWidth = 0.45 + rnd() * 0.7;
+    x.beginPath(); hx.beginPath(); rx.beginPath();
+    x.moveTo(sx, sy); hx.moveTo(sx, sy); rx.moveTo(sx, sy);
+    x.lineTo(sx + len, sy + (rnd() - 0.5) * 3);
+    hx.lineTo(sx + len, sy + (rnd() - 0.5) * 3);
+    rx.lineTo(sx + len, sy + (rnd() - 0.5) * 3);
+    x.stroke(); hx.stroke(); rx.stroke();
+  }
+  return { map: c, normal: normalFromHeight(hh, 2.4), rough: rr };
+}
+
+/* Ninsei asphalt. The roughness map is the whole point: puddles are the
+   only smooth thing on the street and they are what makes it read as wet. */
+function texAsphalt() {
+  const W = 512, H = 512;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const hh = cvs(W, H), hx = hh.getContext('2d');
+  const rr = cvs(W, H), rx = rr.getContext('2d');
+  const rnd = mulberry32(41);
+
+  x.fillStyle = '#0b0e10'; x.fillRect(0, 0, W, H);
+  hx.fillStyle = '#808080'; hx.fillRect(0, 0, W, H);
+  rx.fillStyle = '#dcdcdc'; rx.fillRect(0, 0, W, H);
+
+  x.globalCompositeOperation = 'overlay'; x.globalAlpha = 0.7;
+  x.drawImage(fbmCanvas(256, 256, 3, 12, 4, 1), 0, 0, W, H);
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+  hx.globalAlpha = 0.75; hx.drawImage(fbmCanvas(256, 256, 3, 26, 3, 1), 0, 0, W, H); hx.globalAlpha = 1;
+
+  for (let i = 0; i < 2600; i++) {                                /* aggregate */
+    const cx = rnd() * W, cy = rnd() * H, r = 0.6 + rnd() * 1.9;
+    const t = 24 + rnd() * 34;
+    x.fillStyle = `rgba(${t},${t + 3},${t + 5},${0.18 + rnd() * 0.3})`;
+    x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+  }
+  for (let i = 0; i < 10; i++) {                                  /* puddles */
+    const cx = rnd() * W, cy = rnd() * H, r = 24 + rnd() * 78;
+    /* a long, even ramp: a tight one leaves a visible ring and the road
+       ends up covered in polka dots rather than standing water */
+    const g = rx.createRadialGradient(cx, cy, r * 0.05, cx, cy, r);
+    g.addColorStop(0, 'rgba(10,10,10,.86)'); g.addColorStop(0.35, 'rgba(40,40,40,.6)');
+    g.addColorStop(0.68, 'rgba(120,120,120,.28)'); g.addColorStop(1, 'rgba(220,220,220,0)');
+    rx.fillStyle = g; rx.beginPath(); rx.arc(cx, cy, r, 0, TAU); rx.fill();
+    const gx = x.createRadialGradient(cx, cy, r * 0.1, cx, cy, r);
+    gx.addColorStop(0, 'rgba(9,14,18,.6)'); gx.addColorStop(1, 'rgba(9,14,18,0)');
+    x.fillStyle = gx; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+  }
+  for (let i = 0; i < 5; i++) {                                   /* tar seams */
+    const y = rnd() * H;
+    x.strokeStyle = 'rgba(4,5,6,.8)'; x.lineWidth = 1.6 + rnd() * 2.4;
+    x.beginPath(); x.moveTo(0, y);
+    for (let s = 0; s <= 8; s++) x.lineTo((W / 8) * s, y + (rnd() - 0.5) * 16);
+    x.stroke();
+  }
+  /* tyre-polished tracks: darker albedo and smoother roughness, aligned with
+     the street so moving highlights describe the camera's forward motion. */
+  [0.31, 0.69].forEach((u) => {
+    const cx = W * u;
+    const g = x.createLinearGradient(cx - 36, 0, cx + 36, 0);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.5, 'rgba(3,5,7,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(cx - 36, 0, 72, H);
+    const rg = rx.createLinearGradient(cx - 42, 0, cx + 42, 0);
+    rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(.5, 'rgba(0,0,0,.36)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    rx.fillStyle = rg; rx.fillRect(cx - 42, 0, 84, H);
+  });
+  return { map: c, normal: normalFromHeight(hh, 1.3), rough: rr };
+}
+
+/* neon signage plate — the practicals that give Chiba its warm/cold contrast */
+function texSign(seed) {
+  const W = 256, H = 512;
+  const c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  const hues = ['#f01570', '#20a8d9', '#b7ca58', '#c9aea7', '#6a6e8a'];
+  const ink = hues[(rnd() * hues.length) | 0];
+
+  x.fillStyle = '#05070a'; x.fillRect(0, 0, W, H);
+  x.strokeStyle = 'rgba(120,130,130,.16)'; x.lineWidth = 3; x.strokeRect(4, 4, W - 8, H - 8);
+
+  const glyphs = '電脳空間千葉市仁清接続幽霊残像回線潜入黒氷企業街灯雨夜';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.shadowColor = ink;
+  const n = 3 + ((rnd() * 3) | 0);
+  const size = Math.min(74, (H - 60) / n);
+  for (let i = 0; i < n; i++) {
+    const g = glyphs[(rnd() * glyphs.length) | 0];
+    const y = 42 + (H - 84) * ((i + 0.5) / n);
+    x.font = `${size}px "Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif`;
+    x.shadowBlur = 26; x.fillStyle = ink; x.fillText(g, W / 2, y);
+    x.shadowBlur = 8;  x.fillStyle = '#fff'; x.globalAlpha = 0.72; x.fillText(g, W / 2, y);
+    x.globalAlpha = 1;
+  }
+  x.shadowBlur = 0;
+  x.fillStyle = ink; x.globalAlpha = 0.5;
+  x.fillRect(14, H - 26, W - 28, 3); x.fillRect(14, 22, W - 28, 3);
+  x.globalAlpha = 1;
+  return c;
+}
+
+/* soft radial sprite — one shared texture for every glow in the world */
+function texGlow(inner = 'rgba(255,255,255,1)', outer = 'rgba(255,255,255,0)') {
+  const S = 128, c = cvs(S, S), x = c.getContext('2d');
+  const g = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+  g.addColorStop(0, inner); g.addColorStop(0.28, 'rgba(255,255,255,.34)'); g.addColorStop(1, outer);
+  x.fillStyle = g; x.fillRect(0, 0, S, S);
+  return c;
+}
+
+/* the sky above the port — the colour of television, tuned to a dead channel */
+function texDeadChannel() {
+  const S = 512, c = cvs(S, S), x = c.getContext('2d');
+  const img = x.createImageData(S, S), d = img.data;
+  const rnd = mulberry32(97);
+  for (let y = 0; y < S; y++) for (let i = 0; i < S; i++) {
+    const band = 0.5 + 0.5 * Math.sin(y * 0.09);
+    const v = (rnd() * 0.62 + band * 0.38) * 255;
+    const k = (y * S + i) * 4;
+    d[k] = v * 0.86; d[k + 1] = v * 0.93; d[k + 2] = v; d[k + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  const vg = x.createRadialGradient(S / 2, S / 2, S * 0.2, S / 2, S / 2, S * 0.5);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,1)');
+  x.globalCompositeOperation = 'destination-in';
+  x.fillStyle = vg; x.fillRect(0, 0, S, S);
+  return c;
+}
+
+/* Cover-grid hologram with a real alpha channel. The mask is authored at the
+   texture level (not a rectangular blend card), alpha-tested at the material,
+   and dithered on its perimeter so overlapping fragments keep clean depth. */
+function texHoloMask(seed, ink = '#20a8d9') {
+  const W = 512, H = 512, c = cvs(W, H), x = c.getContext('2d');
+  const rnd = mulberry32(seed);
+  x.clearRect(0, 0, W, H);
+  const vg = x.createRadialGradient(W * .5, H * .54, 8, W * .5, H * .54, W * .5);
+  vg.addColorStop(0, 'rgba(255,255,255,.92)');
+  vg.addColorStop(.58, 'rgba(255,255,255,.34)');
+  vg.addColorStop(1, 'rgba(255,255,255,0)');
+  x.strokeStyle = ink; x.lineWidth = 2;
+  x.shadowColor = ink; x.shadowBlur = 12;
+  for (let i = -11; i <= 11; i++) {
+    x.globalAlpha = .18 + .35 * (1 - Math.abs(i) / 12);
+    x.beginPath(); x.moveTo(W * .5 + i * 9, H * .42); x.lineTo(W * .5 + i * 34, H); x.stroke();
+  }
+  for (let i = 0; i < 18; i++) {
+    const t = i / 18, y = H * .42 + Math.pow(t, 1.72) * H * .58;
+    x.globalAlpha = .16 + t * .35;
+    x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke();
+  }
+  x.shadowBlur = 0;
+  for (let i = 0; i < 52; i++) {
+    const px = rnd() * W, py = rnd() * H;
+    x.globalAlpha = .22 + rnd() * .58;
+    x.fillStyle = rnd() < .18 ? '#f01570' : ink;
+    x.fillRect(px, py, 2 + rnd() * 7, 1 + rnd() * 2);
+  }
+  x.globalCompositeOperation = 'destination-in';
+  x.globalAlpha = 1; x.fillStyle = vg; x.fillRect(0, 0, W, H);
+  x.globalCompositeOperation = 'destination-out';
+  x.fillStyle = 'rgba(0,0,0,.82)';
+  for (let y = 0; y < H; y += 4) for (let xx = (y / 4) % 2 ? 2 : 0; xx < W; xx += 4) {
+    if (rnd() < .22) x.fillRect(xx, y, 1, 1);
+  }
+  x.globalCompositeOperation = 'source-over';
+  return c;
+}
+
+/* ══════════════════════════════════════════ renderer + world */
+
+const stage = $('#stage');
+const world = {
+  ok: false, renderer: null, scene: null, camera: null,
+  registry: {}, quality: null, maxAniso: 1
+};
+
+function makeQuality() {
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  const small = innerWidth < 860;
+  const mobile = coarse || small;
+  const cores = navigator.hardwareConcurrency || 4;
+  const weak = mobile || cores <= 4;
+  return {
+    mobile,
+    dpr: mobile ? 1.35 : 1.75,
+    bloom: !weak || mobile,          /* bloom is the cheapest thing here, keep it */
+    bloomScale: weak ? 0.2 : 0.25,
+    rain: weak ? 460 : 1100,
+    motes: weak ? 420 : 1000,
+    towers: weak ? 128 : 226,
+    monolithDetail: weak ? 3 : 4,
+    aniso: weak ? 4 : 8
+  };
+}
+
+function tex(canvas, opt = {}) {
+  const t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = opt.wrap || THREE.RepeatWrapping;
+  if (opt.repeat) t.repeat.set(opt.repeat[0], opt.repeat[1]);
+  t.anisotropy = Math.min(opt.aniso ?? world.quality.aniso, world.maxAniso);
+  t.colorSpace = opt.srgb === false ? THREE.NoColorSpace : THREE.SRGBColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+
+/* a {map, normal, rough} set hung on a standard material at one tiling; the
+   colour is a multiplier on an already-dark albedo so one plate can be
+   re-tinted per use instead of regenerated */
+function surface(set, repeat, opt = {}) {
+  const Mat = opt.physical ? THREE.MeshPhysicalMaterial : THREE.MeshStandardMaterial;
+  const m = new Mat({
+    map: tex(set.map, { repeat, aniso: opt.aniso }),
+    normalMap: tex(set.normal, { repeat, srgb: false, aniso: opt.aniso }),
+    roughnessMap: tex(set.rough, { repeat, srgb: false, aniso: opt.aniso }),
+    color: opt.color ?? 0xffffff,
+    roughness: opt.roughness ?? 1,
+    metalness: opt.metalness ?? 0,
+    envMapIntensity: opt.env ?? 0.55,
+    ...(opt.physical ? {
+      clearcoat: opt.clearcoat ?? 0,
+      clearcoatRoughness: opt.clearcoatRoughness ?? 0.35,
+      sheen: opt.sheen ?? 0,
+      sheenRoughness: opt.sheenRoughness ?? 0.6,
+      sheenColor: new THREE.Color(opt.sheenColor ?? 0x000000)
+    } : {})
+  });
+  m.normalScale.set(opt.normalScale ?? 0.75, opt.normalScale ?? 0.75);
+  return m;
+}
+
+/* ── shader fragments shared by the custom materials ────────────────────── */
+const GLSL_HASH = `
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+float h11(float p){ p=fract(p*0.1031); p*=p+33.33; return fract(p*(p+p)); }
+`;
+
+/* Bayer 4×4 as two nested 2×2 steps — the arcology facades, the construct and
+   the final composite all read the same matrix, so the whole frame shares one
+   dither grammar instead of three unrelated noise fields. */
+const GLSL_BAYER = `
+float bayer2(vec2 a){ a = floor(a); return fract(dot(a, vec2(0.5, a.y * 0.75))); }
+float bayer4(vec2 a){ return bayer2(a * 0.5) * 0.25 + bayer2(a); }
+`;
+
+function buildWorld() {
+  const q = world.quality;
+  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance', stencil: false });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, q.dpr));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.NoToneMapping;   /* tone mapping happens in the composite */
+  renderer.setClearColor(0x04060a, 1);
+  renderer.sortObjects = true;
+  stage.appendChild(renderer.domElement);
+  world.renderer = renderer;
+  world.maxAniso = renderer.capabilities.getMaxAnisotropy();
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x080d14, 0.0075);
+  world.scene = scene;
+
+  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.5, 1400);
+  world.camera = camera;
+
+  const root = new THREE.Group(); root.name = 'world';
+  const environment = new THREE.Group(); environment.name = 'environment';
+  const landmarks   = new THREE.Group(); landmarks.name = 'landmarks';
+  const atmosphere  = new THREE.Group(); atmosphere.name = 'atmosphere';
+  root.add(environment, landmarks, atmosphere);
+  scene.add(root);
+
+  const R = world.registry;
+  R.root = root;
+
+  /* ── environment light rig ─────────────────────────────────────────────
+     one cold key from the dead-channel sky, a hemispheric fill that keeps
+     upward faces separated from the ground, and practicals only where a
+     visible emitter justifies them. */
+  const key = new THREE.DirectionalLight(0x8bc9df, 1.15);
+  key.position.set(-42, 58, 34);
+  const fill = new THREE.HemisphereLight(0x21394a, 0x07080a, 0.55);
+  const rim = new THREE.DirectionalLight(0xf01570, 0.34);
+  rim.position.set(52, 28, -72);
+  const bounce = new THREE.PointLight(0xb7ca58, 0, 120, 2);   /* matrix core spill */
+  bounce.position.set(0, 62, -150);
+  const streetWarm = new THREE.PointLight(0xf01570, 0, 44, 2);
+  streetWarm.position.set(6, 6.5, 44);
+  const streetCold = new THREE.PointLight(0x20a8d9, 0, 40, 2);
+  streetCold.position.set(-7, 7.5, 26);
+  const chapterSpot = new THREE.SpotLight(0x20a8d9, 0, 210, Math.PI * .19, .72, 1.45);
+  chapterSpot.position.set(34, 54, 78);
+  chapterSpot.target.position.set(0, 18, -34);
+  environment.add(key, fill, rim, bounce, streetWarm, streetCold, chapterSpot, chapterSpot.target);
+  Object.assign(R, { key, fill, rim, bounce, streetWarm, streetCold, chapterSpot });
+
+  /* ── sky dome ───────────────────────────────────────────────────────────
+     fog:false — a distant plate that participates in fog turns into a pale
+     band and destroys the depth the fog was bought for. */
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms: {
+      uTime:   { value: 0 },
+      uHorizon:{ value: new THREE.Color(0x14202c) },
+      uZenith: { value: new THREE.Color(0x03050a) },
+      uGlow:   { value: new THREE.Color(0xf01570) },
+      uGlowAmt:{ value: 0.5 },
+      uStars:  { value: 0.5 }
+    },
+    vertexShader: `
+      varying vec3 vDir;
+      void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `
+      ${GLSL_HASH}
+      uniform float uTime, uGlowAmt, uStars;
+      uniform vec3 uHorizon, uZenith, uGlow;
+      varying vec3 vDir;
+      void main(){
+        vec3 d = normalize(vDir);
+        float up = clamp(d.y*0.5+0.5, 0.0, 1.0);
+        vec3 col = mix(uHorizon, uZenith, pow(up, 0.62));
+
+        /* Sodium/vermilion haze pinned to the horizon behind the Sprawl. The
+           falloff is steep on purpose: a wide glow turns every gap between
+           towers into a red panel instead of a distant city burning. */
+        float band = exp(-pow(max(d.y, -0.02) * 12.0, 2.0));
+        col += uGlow * band * uGlowAmt * 0.2;
+        col += vec3(0.05,0.055,0.07) * exp(-pow(max(d.y,-0.02)*5.0, 2.0)) * uGlowAmt;
+
+        /* Hash angular coordinates, not d.xz: d.xz collapses toward the
+           zenith, so a direct hash swells its cells into rectangles and the
+           stars come out as white slabs. */
+        vec2 sph = vec2(atan(d.z, d.x), asin(clamp(d.y, -1.0, 1.0)));
+
+        /* Dead-channel static, held to the lower sky where the city's own
+           light justifies it. Spread across the whole dome it stops being
+           weather and becomes noise. */
+        float st = h21(floor(sph * 300.0) + floor(uTime * 10.0));
+        col += vec3(0.008,0.009,0.011) * st * exp(-pow(max(d.y, 0.0) * 3.2, 2.0));
+
+        /* Sparse stars kept deliberately under the bloom threshold: any
+           brighter and each one blooms into a visible square. The sub-cell
+           falloff is what makes them points rather than lit grid cells. */
+        vec2 sg = sph * 165.0;
+        float s = step(0.9978, h21(floor(sg)));
+        float fall = smoothstep(0.46, 0.06, length(fract(sg) - 0.5));
+        col += vec3(0.42,0.46,0.52) * s * fall * uStars * smoothstep(0.12, 0.6, d.y);
+
+        gl_FragColor = vec4(col, 1.0);
+      }`
+  });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(760, 32, 20), skyMat);
+  sky.frustumCulled = false;
+  environment.add(sky);
+  R.skyMat = skyMat;
+
+  /* the dead-channel disc: a huge static-filled sun-substitute low in the sky */
+  const discMat = new THREE.MeshBasicMaterial({
+    map: tex(texDeadChannel(), { wrap: THREE.ClampToEdgeWrapping }),
+    transparent: true, depthWrite: false, fog: false,
+    blending: THREE.AdditiveBlending, opacity: 0.55, color: 0xffd9c8
+  });
+  const disc = new THREE.Mesh(new THREE.PlaneGeometry(124, 124), discMat);
+  disc.position.set(232, 104, -580);
+  disc.frustumCulled = false;
+  environment.add(disc);
+  R.disc = disc; R.discMat = discMat;
+
+  /* ── the matrix floor ───────────────────────────────────────────────────
+     an emissive lattice that fades into fog. It is the one surface that is
+     data rather than matter, so it is unlit and additive. */
+  const gridMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, fog: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 }, uAmt: { value: 0.4 },
+      uColA: { value: new THREE.Color(0xb7ca58) },
+      uColB: { value: new THREE.Color(0x20a8d9) },
+      uCam:  { value: new THREE.Vector3() }
+    },
+    vertexShader: `
+      varying vec3 vW;
+      void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `
+      uniform float uTime, uAmt; uniform vec3 uColA, uColB, uCam;
+      varying vec3 vW;
+      float grid(vec2 p, float w){
+        vec2 g = abs(fract(p - 0.5) - 0.5) / fwidth(p);
+        float l = min(g.x, g.y);
+        return 1.0 - min(l * w, 1.0);
+      }
+      void main(){
+        float d = length(vW.xz - uCam.xz);
+        float fade = exp(-d * 0.0042) * (1.0 - smoothstep(120.0, 460.0, d));
+        float fine  = grid(vW.xz / 6.0, 1.0) * 0.42;
+        float major = grid(vW.xz / 48.0, 1.6) * 0.9;
+        /* a slow pulse travelling out from the core keeps the plane alive */
+        float pulse = smoothstep(0.86, 1.0, sin(d*0.055 - uTime*0.85)) * 0.55;
+        vec3 col = mix(uColA, uColB, clamp(d/300.0, 0.0, 1.0));
+        /* hold the lattice off the very near field: directly under the rig it
+           otherwise burns the bottom of every high-angle composition */
+        fade *= smoothstep(6.0, 46.0, d);
+        float a = (fine + major + major*pulse) * fade * uAmt;
+        if (a < 0.002) discard;
+        gl_FragColor = vec4(col * a * 1.6, a);
+      }`
+  });
+  const gridPlane = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), gridMat);
+  gridPlane.rotation.x = -Math.PI / 2;
+  gridPlane.position.y = 0.02;
+  environment.add(gridPlane);
+  R.gridMat = gridMat;
+
+  /* a solid floor under the lattice so the city has something to sit on */
+  const concrete = texConcrete();
+  const groundMat = surface(concrete, [90, 90], { color: 0x2c3238, roughness: 1, normalScale: 0.5, env: 0.35 });
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  environment.add(ground);
+
+  /* ══════════════════════════ the Sprawl ═══════════════════════════════
+     One instanced slab, one custom facade shader. Windows are computed in
+     WORLD space so a 90 m tower and a 20 m block share the same window
+     size — the single detail that makes a night city read as a night city. */
+  const facadeMat = new THREE.ShaderMaterial({
+    fog: true,
+    uniforms: THREE.UniformsUtils.merge([
+      THREE.UniformsLib.fog,
+      {
+        uTime:  { value: 0 },
+        uLit:   { value: 0.5 },
+        uBase:  { value: new THREE.Color(0x141a20) },
+        uKeyDir:{ value: new THREE.Vector3(-0.55, 0.72, 0.42).normalize() },
+        uKeyCol:{ value: new THREE.Color(0x7f9fbb) },
+        uSky:   { value: new THREE.Color(0x1b2f44) },
+        uGnd:   { value: new THREE.Color(0x060809) },
+        uWarm:  { value: 1 }
+      }
+    ]),
+    vertexShader: `
+      #include <common>
+      #include <fog_pars_vertex>
+      varying vec3 vW; varying vec3 vN; varying float vSeed;
+      void main(){
+        mat4 im = mat4(1.0);
+        #ifdef USE_INSTANCING
+          im = instanceMatrix;
+        #endif
+        vec4 wp = modelMatrix * im * vec4(position, 1.0);
+        vW = wp.xyz;
+        vN = normalize(mat3(modelMatrix) * (mat3(im) * normal));
+        vSeed = fract(sin(im[3].x * 12.9898 + im[3].z * 78.233) * 43758.5453);
+        vec4 mvPosition = viewMatrix * wp;
+        #include <fog_vertex>
+        gl_Position = projectionMatrix * mvPosition;
+      }`,
+    fragmentShader: `
+      #include <common>
+      #include <fog_pars_fragment>
+      ${GLSL_HASH}
+      ${GLSL_BAYER}
+      uniform float uTime, uLit, uWarm;
+      uniform vec3 uBase, uKeyDir, uKeyCol, uSky, uGnd;
+      varying vec3 vW; varying vec3 vN; varying float vSeed;
+      void main(){
+        vec3 n = normalize(vN);
+
+        /* concrete tone: two scales of world-space mottle, no texture fetch */
+        float m = h21(floor(vW.xz*0.7)+vSeed) * 0.55 + h21(floor(vW.xy*0.22)) * 0.45;
+        vec3 col = uBase * (0.62 + 0.72*m);
+
+        /* vertical grime: darker toward the base, streaked */
+        float grime = smoothstep(0.0, 34.0, vW.y);
+        col *= mix(0.55, 1.0, grime);
+        col *= 0.86 + 0.28 * h21(vec2(floor(vW.x*1.6), 0.0));
+
+        /* Windows in world units — 1.75 m × 2.5 m, on whichever face we hit,
+           so a 90 m tower and a 20 m block share one window size. */
+        vec2 fp = abs(n.x) > 0.5 ? vW.zy : vW.xy;
+        vec2 q  = vec2(fp.x / 1.75, fp.y / 2.5);
+        vec2 id = floor(q), f = fract(q);
+        float inWin = step(0.2, f.x)*step(f.x, 0.8)*step(0.24, f.y)*step(f.y, 0.74);
+        inWin *= step(2.6, vW.y);                       /* no windows at street level */
+        /* floor slabs read as a dark band between window rows */
+        inWin *= 1.0 - step(0.86, f.y) * 0.9;
+        float r  = h21(id + vSeed*41.0);
+        /* whole buildings run dark or busy, instead of every tower carrying
+           the same even sprinkle of lit cells */
+        float occupancy = clamp(uLit * (0.3 + 1.5 * h21(vec2(vSeed * 91.0, 3.0))), 0.0, 0.92);
+        float on = step(1.0 - occupancy * 0.55, r);
+        on *= 1.0 - step(0.993, h21(id + floor(uTime*1.3))) * 0.85;   /* flicker */
+
+        float pick = h21(id*1.9 + 7.0);
+        vec3 wc = mix(vec3(1.0,0.66,0.30), vec3(0.32,0.86,1.0), step(0.58, pick));
+        wc = mix(wc, vec3(0.72,0.79,0.34), step(0.962, pick));
+        wc = mix(vec3(0.5,0.62,0.7), wc, uWarm);
+        vec3 emis = wc * inWin * on * 1.4;
+
+        /* one key, hemispheric fill, and a cold rim that separates silhouettes */
+        float ndl  = max(dot(n, uKeyDir), 0.0);
+        float hemi = 0.5 + 0.5*n.y;
+        vec3 lit = uKeyCol * ndl * 1.05 + mix(uGnd, uSky, hemi);
+        col *= lit;
+
+        /* ordered dither on the shaded concrete only, so the facades keep the
+           printed look without touching the emissive windows */
+        float b = bayer4(gl_FragCoord.xy);
+        col += (b - 0.5) * 0.022;
+
+        col += emis;
+        gl_FragColor = vec4(col, 1.0);
+        #include <fog_fragment>
+      }`
+  });
+  R.facadeMat = facadeMat;
+
+  const slab = new THREE.BoxGeometry(1, 1, 1);
+  const towers = new THREE.InstancedMesh(slab, facadeMat, q.towers);
+  towers.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  const rnd = mulberry32(1984);
+  const mtx = new THREE.Matrix4();
+  const qt = new THREE.Quaternion();
+  const pos = new THREE.Vector3(), scl = new THREE.Vector3();
+  let placed = 0;
+  /* authored clusters, not unbounded scatter: an open avenue down x≈0 with
+     the density rising toward the back of frame */
+  for (let i = 0; placed < q.towers && i < q.towers * 6; i++) {
+    const side = rnd() < 0.5 ? -1 : 1;
+    const x = side * (24 + Math.pow(rnd(), 0.7) * 130);
+    const z = -46 - Math.pow(rnd(), 0.78) * 300;
+    const depthT = clamp((-z - 46) / 300, 0, 1);
+    const w = 9 + rnd() * 20;
+    const d = 9 + rnd() * 20;
+    /* A skyline needs a few dominant slabs, not an even field of low blocks:
+       most towers stay mid-height and roughly one in seven runs tall. */
+    const hero = rnd() < 0.14;
+    const h = hero ? 78 + rnd() * 64 : 20 + Math.pow(rnd(), 1.15) * 54;
+    pos.set(x + (rnd() - 0.5) * 10, h / 2, z);
+    scl.set(w, h, d);
+    qt.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.round(rnd() * 4) * (Math.PI / 8));
+    mtx.compose(pos, qt, scl);
+    towers.setMatrixAt(placed++, mtx);
+  }
+  towers.count = placed;
+  towers.instanceMatrix.needsUpdate = true;
+  towers.frustumCulled = false;
+  landmarks.add(towers);
+
+  /* aircraft warning lamps on the tallest slabs — tiny, but they sell scale.
+     Emitters are authored ABOVE 1.0 in linear space; that is what gives the
+     bloom pass something real to find instead of a blurred grey frame. */
+  const lampGeo = new THREE.SphereGeometry(0.5, 6, 5);
+  const lampMat = new THREE.MeshBasicMaterial({ fog: false });
+  lampMat.color.setRGB(2.4, 0.3, 0.18);
+  const lamps = new THREE.InstancedMesh(lampGeo, lampMat, 26);
+  const lr = mulberry32(77);
+  for (let i = 0; i < 26; i++) {
+    pos.set((lr() < 0.5 ? -1 : 1) * (28 + lr() * 120), 42 + lr() * 84, -60 - lr() * 280);
+    mtx.compose(pos, new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
+    lamps.setMatrixAt(i, mtx);
+  }
+  lamps.instanceMatrix.needsUpdate = true;
+  landmarks.add(lamps);
+  R.lampMat = lampMat;
+
+  /* ══════════════════════════ Chiba: Ninsei ════════════════════════════ */
+  const street = new THREE.Group(); street.name = 'chiba';
+  street.position.set(0, 0, 44);
+  landmarks.add(street);
+  R.street = street;
+
+  const asphalt = texAsphalt();
+  const roadMat = surface(asphalt, [5, 14], {
+    color: 0xffffff, roughness: 0.82, metalness: 0.48, normalScale: 0.92, env: 1.5,
+    physical: true, clearcoat: 0.72, clearcoatRoughness: 0.23
+  });
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(26, 84), roadMat);
+  road.rotation.x = -Math.PI / 2; road.position.y = 0.04;
+  street.add(road);
+
+  const panel = texPanel();
+  const blockMat = surface(concrete, [3, 4], { color: 0x353b41, normalScale: 0.9, env: 0.5 });
+  const boxMat = surface(panel, [2, 2], { color: 0x555c63, roughness: 0.72, metalness: 0.55, env: 0.9 });
+  const box = new THREE.BoxGeometry(1, 1, 1);
+  const sr = mulberry32(303);
+  for (let s = -1; s <= 1; s += 2) {
+    for (let i = 0; i < 8; i++) {
+      const h = 7 + sr() * 13, d = 9 + sr() * 8;
+      const b = new THREE.Mesh(box, blockMat);
+      b.scale.set(9 + sr() * 5, h, d);
+      b.position.set(s * (16 + sr() * 3), h / 2, -34 + i * 10 + sr() * 3);
+      street.add(b);
+      /* service clutter, so the kerb line is never a clean extrusion */
+      for (let k = 0; k < 2; k++) {
+        const u = new THREE.Mesh(box, boxMat);
+        const us = 0.7 + sr() * 1.5;
+        u.scale.set(us, us * (0.6 + sr()), us);
+        u.position.set(s * (10.6 + sr() * 1.4), us * 0.5, b.position.z + (sr() - 0.5) * 7);
+        street.add(u);
+      }
+      /* signage: a visible emitter, a glow card and a real light budget */
+      if (sr() < 0.75) {
+        const sm = new THREE.MeshBasicMaterial({
+          map: tex(texSign(i * 7 + s * 3 + 5), { wrap: THREE.ClampToEdgeWrapping }),
+          transparent: true, fog: true
+        });
+        sm.color.setRGB(1.9, 1.9, 1.9);
+        const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3.4), sm);
+        sg.position.set(s * 10.1, 3.6 + sr() * 5.5, b.position.z + (sr() - 0.5) * 5);
+        sg.rotation.y = s > 0 ? -Math.PI / 2 : Math.PI / 2;
+        street.add(sg);
+      }
+    }
+  }
+  /* wet-street practicals are what light the actors, not the key */
+  const streetLampGeo = new THREE.SphereGeometry(0.3, 8, 6);
+  for (let i = 0; i < 7; i++) {
+    const warm = i % 2 === 0;
+    const bulbMat = new THREE.MeshBasicMaterial({ fog: false });
+    if (warm) bulbMat.color.setRGB(3.2, 2.1, 1.1); else bulbMat.color.setRGB(1.4, 2.8, 3.4);
+    const l = new THREE.Mesh(streetLampGeo, bulbMat);
+    l.position.set((i % 2 ? -1 : 1) * 9.2, 7.4, -30 + i * 10);
+    street.add(l);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: tex(texGlow(), { wrap: THREE.ClampToEdgeWrapping }),
+      color: warm ? 0xf01570 : 0x20a8d9, transparent: true,
+      blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.3, fog: false
+    }));
+    halo.scale.setScalar(3.6); halo.position.copy(l.position);
+    street.add(halo);
+  }
+
+  /* ══════════════════════════ the ICE conduit ══════════════════════════
+     The run: a ribbed data corridor crossing the avenue at altitude. */
+  const ice = new THREE.Group(); ice.name = 'ice';
+  landmarks.add(ice);
+  R.ice = ice;
+  /* The conduit rides well above the construct: at its old altitude the ribs
+     swung through the chapter-04 camera and barred the subject. */
+  const iceCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3( 98, 40,  52),
+    new THREE.Vector3( 50, 46,  10),
+    new THREE.Vector3(  6, 52, -32),
+    new THREE.Vector3(-46, 56, -78),
+    new THREE.Vector3(-98, 60, -130)
+  ]);
+  const ribMat = new THREE.MeshStandardMaterial({
+    color: 0x1d252c, roughness: 0.44, metalness: 0.86, envMapIntensity: 1.1
+  });
+  const ribGeo = new THREE.TorusGeometry(6.4, 0.32, 5, 12);
+  const RIBS = 62;
+  const ribs = new THREE.InstancedMesh(ribGeo, ribMat, RIBS);
+  const up = new THREE.Vector3(0, 1, 0);
+  const tan = new THREE.Vector3();
+  for (let i = 0; i < RIBS; i++) {
+    const t = i / (RIBS - 1);
+    iceCurve.getPointAt(t, pos);
+    iceCurve.getTangentAt(t, tan);
+    qt.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tan);
+    const s = 1 + Math.sin(t * 9) * 0.06;
+    mtx.compose(pos, qt, new THREE.Vector3(s, s, 1));
+    ribs.setMatrixAt(i, mtx);
+  }
+  ribs.instanceMatrix.needsUpdate = true;
+  ice.add(ribs);
+
+  /* the ICE itself: an additive shell that hardens when the layer is armed */
+  const iceShellMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending, fog: false,
+    uniforms: { uTime: { value: 0 }, uAmt: { value: 0.32 }, uCol: { value: new THREE.Color(0x20a8d9) } },
+    vertexShader: `
+      varying vec2 vUv; varying vec3 vN; varying vec3 vV;
+      void main(){ vUv = uv; vN = normalize(normalMatrix * normal);
+        vec4 mv = modelViewMatrix * vec4(position,1.0); vV = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `
+      ${GLSL_HASH}
+      uniform float uTime, uAmt; uniform vec3 uCol;
+      varying vec2 vUv; varying vec3 vN; varying vec3 vV;
+      void main(){
+        float fres = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.4);
+        float scan = smoothstep(0.62, 1.0, sin(vUv.x*90.0 - uTime*4.2));
+        float hexish = step(0.72, h21(floor(vec2(vUv.x*120.0, vUv.y*16.0))));
+        float a = (fres*0.8 + scan*0.35 + hexish*0.14) * uAmt;
+        gl_FragColor = vec4(uCol * a * 1.7, a);
+      }`
+  });
+  const iceShell = new THREE.Mesh(new THREE.TubeGeometry(iceCurve, 96, 6.1, 12, false), iceShellMat);
+  ice.add(iceShell);
+  R.iceShellMat = iceShellMat;
+
+  /* route nodes riding the conduit */
+  const nodeMat = new THREE.MeshBasicMaterial({ color: 0x6a6e8a, fog: false, toneMapped: false });
+  const nodes = new THREE.Group();
+  for (let i = 0; i < 5; i++) {
+    const n = new THREE.Mesh(new THREE.OctahedronGeometry(0.85, 0), nodeMat);
+    n.userData.t = i / 5;
+    nodes.add(n);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: tex(texGlow(), { wrap: THREE.ClampToEdgeWrapping }), color: 0xf01570,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.6, fog: false
+    }));
+    halo.scale.setScalar(6); n.add(halo);
+  }
+  ice.add(nodes);
+  R.nodes = nodes; R.iceCurve = iceCurve;
+
+  /* ══════════════════════ nonspace: core + fortresses ══════════════════ */
+  const nonspace = new THREE.Group(); nonspace.name = 'nonspace';
+  nonspace.position.set(0, 0, 0);
+  landmarks.add(nonspace);
+  R.nonspace = nonspace;
+
+  const coreMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+    uniforms: { uTime: { value: 0 }, uAmt: { value: 0.5 }, uCol: { value: new THREE.Color(0xb7ca58) } },
+    vertexShader: `
+      varying vec3 vN; varying vec3 vV;
+      void main(){ vN = normalize(normalMatrix * normal);
+        vec4 mv = modelViewMatrix * vec4(position,1.0); vV = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `
+      uniform float uTime, uAmt; uniform vec3 uCol;
+      varying vec3 vN; varying vec3 vV;
+      void main(){
+        float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.0);
+        float p = 0.72 + 0.28*sin(uTime*1.4);
+        float a = f * uAmt * p;
+        gl_FragColor = vec4(uCol * a * 2.2, a);
+      }`
+  });
+  const coreShell = new THREE.Mesh(new THREE.IcosahedronGeometry(17, 2), coreMat);
+  coreShell.position.set(0, 74, -168);
+  nonspace.add(coreShell);
+  const coreWire = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(17, 1)),
+    new THREE.LineBasicMaterial({ color: 0xb7ca58, transparent: true, opacity: 0.55, fog: true })
+  );
+  coreWire.position.copy(coreShell.position);
+  nonspace.add(coreWire);
+  R.coreShell = coreShell; R.coreWire = coreWire; R.coreMat = coreMat;
+
+  /* Corporate fortresses — data hardened into geography, so: wire only.
+     fog:true is not optional here. Unfogged wire at 200 m reads at the same
+     strength as wire at 20 m, and the whole depth stack collapses into one
+     flat cyan mesh laid over the city. */
+  const fortMat = new THREE.LineBasicMaterial({ color: 0x20a8d9, transparent: true, opacity: 0.3, fog: true });
+  const forts = new THREE.Group();
+  const fr = mulberry32(555);
+  for (let i = 0; i < 15; i++) {
+    const a = (i / 15) * TAU + fr() * 0.4;
+    const rad = 40 + fr() * 96;
+    const w = 8 + fr() * 26, h = 12 + fr() * 60;
+    const geo = fr() < 0.35
+      ? new THREE.EdgesGeometry(new THREE.CylinderGeometry(w * 0.4, w * 0.5, h, 6, 1))
+      : new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, w * (0.6 + fr() * 0.8)));
+    const f = new THREE.LineSegments(geo, fortMat);
+    f.position.set(Math.cos(a) * rad, 52 + fr() * 58, -186 + Math.sin(a) * rad * 0.7);
+    forts.add(f);
+  }
+  nonspace.add(forts);
+  R.forts = forts; R.fortMat = fortMat;
+
+  /* ══════════════════════ the construct (dithered object) ══════════════
+     Wintermute as a presence rather than a face: a displaced sphere shaded
+     with a hard 4-step ramp and a Bayer 4×4 pattern locked to a 3 px screen
+     cell, so it always reads as printed matter inside a lit world. */
+  const monoMat = new THREE.ShaderMaterial({
+    fog: true,
+    uniforms: THREE.UniformsUtils.merge([
+      THREE.UniformsLib.fog,
+      {
+        uTime:  { value: 0 },
+        uAmp:   { value: 1 },
+        uPower: { value: 1 },
+        uCell:  { value: 3 },
+        uSteps: { value: 4 },
+        uDark:  { value: new THREE.Color(0x080c10) },
+        uLight: { value: new THREE.Color(0xf01570) },
+        uRim:   { value: new THREE.Color(0x20a8d9) },
+        uKeyDir:{ value: new THREE.Vector3(-0.55, 0.72, 0.42).normalize() }
+      }
+    ]),
+    vertexShader: `
+      #include <common>
+      #include <fog_pars_vertex>
+      uniform float uTime, uAmp;
+      varying vec3 vN; varying vec3 vV; varying float vD;
+      ${GLSL_HASH}
+      /* three phase-shifted lobes: enough to look alive, cheap enough to be
+         recomputed every frame on a 4-subdivision icosahedron */
+      float lobes(vec3 p){
+        return sin(p.x*0.62 + uTime*0.7) * sin(p.y*0.55 - uTime*0.52)
+             + 0.6*sin(p.z*0.9 + uTime*0.9) * sin(p.x*0.4 - uTime*0.33)
+             + 0.35*sin(p.y*1.7 + uTime*1.3);
+      }
+      /* the sphere is centred on the origin, so the smooth normal is just the
+         normalised position. The geometry's own normal attribute is a FACE
+         normal (icosahedron geometry is non-indexed) and shading with it
+         leaves the displaced form looking like flat plates. */
+      vec3 displaced(vec3 p, float radius){
+        vec3 dir = normalize(p);
+        vec3 s = dir * radius;
+        return s + dir * lobes(s) * uAmp * 1.35;
+      }
+      void main(){
+        float radius = length(position);
+        vec3 dir = normalize(position);
+        vec3 P = displaced(position, radius);
+        vD = lobes(dir * radius) * uAmp;
+
+        /* rebuild the normal from two neighbours on the surface */
+        vec3 t1 = normalize(cross(dir, abs(dir.y) < 0.9 ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0)));
+        vec3 t2 = cross(dir, t1);
+        float e = 0.09;
+        vec3 A = displaced(dir + t1 * e, radius);
+        vec3 B = displaced(dir + t2 * e, radius);
+        vec3 nrm = normalize(cross(A - P, B - P));
+        if (dot(nrm, dir) < 0.0) nrm = -nrm;
+
+        vN = normalize(normalMatrix * nrm);
+        vec4 mv = modelViewMatrix * vec4(P, 1.0);
+        vV = normalize(-mv.xyz);
+        vec4 mvPosition = mv;
+        #include <fog_vertex>
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      #include <common>
+      #include <fog_pars_fragment>
+      ${GLSL_BAYER}
+      uniform float uTime, uCell, uSteps, uPower;
+      uniform vec3 uDark, uLight, uRim, uKeyDir;
+      varying vec3 vN; varying vec3 vV; varying float vD;
+      void main(){
+        vec3 n = normalize(vN);
+        float ndl  = max(dot(n, normalize(uKeyDir)), 0.0);
+        float fres = pow(1.0 - abs(dot(n, normalize(vV))), 2.6);
+        float lum  = ndl*0.78 + fres*0.62 + 0.08 + vD*0.06;
+
+        /* quantise into hard bands, then let the ordered matrix decide which
+           side of each band boundary a pixel falls on */
+        vec2 cell = floor(gl_FragCoord.xy / uCell);
+        float b = bayer4(cell);
+        float q = floor(lum * uSteps + b) / uSteps;
+        q = clamp(q, 0.0, 1.0);
+
+        /* uPower is the chapter's claim on it: a dim shape in the distance
+           for most of the route, fully present only when it is the subject */
+        vec3 col = mix(uDark, uLight * uPower, q);
+        col = mix(col, uRim * uPower, fres * 0.5 * q);
+        gl_FragColor = vec4(col, 1.0);
+        #include <fog_fragment>
+      }`
+  });
+  const monolith = new THREE.Mesh(new THREE.IcosahedronGeometry(11, q.monolithDetail), monoMat);
+  monolith.position.set(0, 27, -54);
+  landmarks.add(monolith);
+  const monoCage = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(16.5, 1)),
+    new THREE.LineBasicMaterial({ color: 0xdcd8ca, transparent: true, opacity: 0.12, fog: true })
+  );
+  monoCage.position.copy(monolith.position);
+  landmarks.add(monoCage);
+  R.monolith = monolith; R.monoMat = monoMat; R.monoCage = monoCage;
+
+  /* ══════════════════════ Freeside spindle ═════════════════════════════ */
+  const spindle = new THREE.Group();
+  spindle.position.set(-124, 178, -302);
+  spindle.rotation.z = 0.32;
+  landmarks.add(spindle);
+  const hullMat = surface(panel, [4, 10], { color: 0x6c737a, roughness: 0.5, metalness: 0.8, env: 1.2 });
+  hullMat.side = THREE.DoubleSide;   /* open-ended cylinder — we see the far wall */
+  const hull = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 96, 24, 1, true), hullMat);
+  spindle.add(hull);
+  for (let i = -2; i <= 2; i++) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(17.5, 0.8, 6, 30),
+      new THREE.MeshStandardMaterial({ color: 0x2a3138, roughness: 0.4, metalness: 0.9, envMapIntensity: 1.1 }));
+    ring.rotation.x = Math.PI / 2; ring.position.y = i * 19;
+    spindle.add(ring);
+  }
+  const bandMat = new THREE.MeshBasicMaterial({ fog: false, side: THREE.DoubleSide });
+  bandMat.color.setRGB(2.6, 1.7, 0.85);
+  for (let i = -1; i <= 1; i++) {
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(15.1, 15.1, 2.4, 24, 1, true), bandMat);
+    band.position.y = i * 28 + 6;
+    spindle.add(band);
+  }
+  R.spindle = spindle;
+
+  /* Alpha-masked data veils punctuate each spatial register. Because their
+     transparency lives in the CanvasTexture and is alpha-tested, the planes
+     read as broken light in space instead of translucent rectangular cards. */
+  const veils = new THREE.Group(); veils.name = 'alpha-veils';
+  const veilSpecs = [
+    [-32, 78, -132, 34, 22, '#20a8d9', 401], [35, 62, -176, 24, 30, '#b7ca58', 402],
+    [-11, 12, 32, 12, 18, '#f01570', 403], [34, 52, -48, 20, 28, '#20a8d9', 404],
+    [-17, 31, -46, 16, 20, '#f01570', 405], [-108, 166, -276, 30, 38, '#20a8d9', 406]
+  ];
+  veilSpecs.forEach(([x, y, z, w, h, color, seed], i) => {
+    const map = tex(texHoloMask(seed, color), { wrap: THREE.ClampToEdgeWrapping, aniso: 4 });
+    const mat = new THREE.MeshBasicMaterial({
+      map, color: 0xffffff, transparent: true, opacity: .26, alphaTest: .055,
+      depthWrite: false, side: THREE.DoubleSide, fog: true, blending: THREE.AdditiveBlending
+    });
+    const veil = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    veil.position.set(x, y, z);
+    veil.userData.phase = i * 1.17;
+    veil.userData.baseY = y;
+    veil.userData.baseOpacity = .18 + (i % 3) * .045;
+    veils.add(veil);
+  });
+  landmarks.add(veils); R.veils = veils;
+
+  /* ══════════════════════ atmosphere ═══════════════════════════════════ */
+
+  /* rain: instanced billboarded streaks, respawned in a box that travels with
+     the camera so density stays constant along the whole route */
+  const rainMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 }, uAmt: { value: 0 }, uCam: { value: new THREE.Vector3() },
+      uCol: { value: new THREE.Color(0x9fc8e0) }
+    },
+    vertexShader: `
+      uniform float uTime, uAmt; uniform vec3 uCam;
+      attribute vec3 seed;
+      varying float vA;
+      void main(){
+        /* fall through a 70 m box anchored to the camera */
+        vec3 p = seed;
+        p.y = mod(seed.y - uTime * (26.0 + seed.z*10.0), 70.0);
+        vec3 base = vec3(p.x, p.y, seed.z*30.0) + vec3(uCam.x, uCam.y - 34.0, uCam.z);
+        /* billboard the quad, stretched along Y into a streak */
+        vec3 right = vec3(modelViewMatrix[0][0], modelViewMatrix[1][0], modelViewMatrix[2][0]);
+        vec3 upv   = vec3(0.0, 1.0, 0.0);
+        vec3 wp = base + right * position.x * 0.05 + upv * position.y * (2.2 + abs(seed.z)*1.6);
+        vA = uAmt;
+        vec4 mv = viewMatrix * vec4(wp, 1.0);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      uniform vec3 uCol; varying float vA;
+      void main(){ if(vA < 0.01) discard; gl_FragColor = vec4(uCol * vA * 0.5, vA * 0.42); }`
+  });
+  const rainGeo = new THREE.InstancedBufferGeometry();
+  const quad = new THREE.PlaneGeometry(1, 1);
+  rainGeo.index = quad.index;
+  rainGeo.attributes.position = quad.attributes.position;
+  rainGeo.attributes.uv = quad.attributes.uv;
+  const rainSeed = new Float32Array(q.rain * 3);
+  const rr2 = mulberry32(808);
+  for (let i = 0; i < q.rain; i++) {
+    rainSeed[i * 3]     = (rr2() - 0.5) * 60;
+    rainSeed[i * 3 + 1] = rr2() * 70;
+    rainSeed[i * 3 + 2] = (rr2() - 0.5) * 2;
+  }
+  rainGeo.setAttribute('seed', new THREE.InstancedBufferAttribute(rainSeed, 3));
+  rainGeo.instanceCount = q.rain;
+  const rain = new THREE.Mesh(rainGeo, rainMat);
+  rain.frustumCulled = false;
+  atmosphere.add(rain);
+  R.rainMat = rainMat;
+
+  /* data motes — the ambient drift that keeps nonspace from feeling empty */
+  const moteGeo = new THREE.BufferGeometry();
+  const mp = new Float32Array(q.motes * 3), ms = new Float32Array(q.motes);
+  const mr = mulberry32(626);
+  for (let i = 0; i < q.motes; i++) {
+    mp[i * 3]     = (mr() - 0.5) * 460;
+    mp[i * 3 + 1] = mr() * 190;
+    mp[i * 3 + 2] = (mr() - 0.5) * 460 - 80;
+    ms[i] = 0.4 + mr() * 1.6;
+  }
+  moteGeo.setAttribute('position', new THREE.BufferAttribute(mp, 3));
+  moteGeo.setAttribute('mscale', new THREE.BufferAttribute(ms, 1));
+  const moteMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 }, uAmt: { value: 0.5 }, uSize: { value: 1 },
+      uColA: { value: new THREE.Color(0xb7ca58) }, uColB: { value: new THREE.Color(0x20a8d9) }
+    },
+    vertexShader: `
+      uniform float uTime, uSize; attribute float mscale;
+      varying float vF;
+      void main(){
+        vec3 p = position;
+        p.y += sin(uTime*0.35 + p.x*0.05) * 2.4;
+        p.x += cos(uTime*0.22 + p.z*0.04) * 3.0;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        vF = fract(mscale * 0.37);
+        gl_PointSize = mscale * uSize * 190.0 / max(-mv.z, 1.0);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      uniform float uAmt; uniform vec3 uColA, uColB;
+      varying float vF;
+      void main(){
+        vec2 d = gl_PointCoord - 0.5;
+        float r = dot(d, d);
+        if (r > 0.25) discard;
+        float a = (1.0 - r*4.0);
+        a = a*a * uAmt;
+        gl_FragColor = vec4(mix(uColA, uColB, vF) * a * 1.4, a);
+      }`
+  });
+  const motes = new THREE.Points(moteGeo, moteMat);
+  motes.frustumCulled = false;
+  atmosphere.add(motes);
+  R.moteMat = moteMat;
+
+  /* pointer wisps live in CAMERA space, so rig movement never detaches them
+     from the hand */
+  const wispCount = 60;
+  const wispGeo = new THREE.BufferGeometry();
+  const wp = new Float32Array(wispCount * 3), wo = new Float32Array(wispCount);
+  for (let i = 0; i < wispCount; i++) { wo[i] = i / wispCount; }
+  wispGeo.setAttribute('position', new THREE.BufferAttribute(wp, 3));
+  wispGeo.setAttribute('woff', new THREE.BufferAttribute(wo, 1));
+  const wispMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, depthTest: false, fog: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: { uTime: { value: 0 }, uAmt: { value: 0 }, uCol: { value: new THREE.Color(0xf01570) } },
+    vertexShader: `
+      attribute float woff; uniform float uTime; varying float vA;
+      void main(){
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vA = pow(1.0 - woff, 1.8);
+        gl_PointSize = (2.0 + 16.0 * vA) ;
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      uniform float uAmt; uniform vec3 uCol; varying float vA;
+      void main(){
+        vec2 d = gl_PointCoord - 0.5; float r = dot(d,d);
+        if (r > 0.25) discard;
+        float a = (1.0 - r*4.0); a = a*a * vA * uAmt;
+        gl_FragColor = vec4(uCol * a * 1.6, a);
+      }`
+  });
+  const wisps = new THREE.Points(wispGeo, wispMat);
+  wisps.frustumCulled = false;
+  camera.add(wisps);
+  scene.add(camera);
+  R.wisps = wisps; R.wispMat = wispMat; R.wispPos = wp;
+
+  /* ══════════════════════ environment probe ════════════════════════════
+     A tiny procedural scene run through PMREM once. The wet asphalt and the
+     spindle hull have something to reflect, which is the only reason they
+     read as wet and as metal at all. */
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envScene = new THREE.Scene();
+  const envSky = new THREE.Mesh(
+    new THREE.SphereGeometry(60, 16, 10),
+    new THREE.MeshBasicMaterial({ side: THREE.BackSide, color: 0x0d1620 })
+  );
+  envScene.add(envSky);
+  [[0xf01570, -20, 6, -18, 9], [0x20a8d9, 22, 9, -12, 7], [0xc9aea7, 4, 4, 24, 8],
+   [0xb7ca58, -14, 20, 20, 5], [0xe0dfd9, 0, 42, 0, 26]].forEach(([c, x, y, z, s]) => {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ color: c }));
+    p.position.set(x, y, z); p.lookAt(0, 6, 0); envScene.add(p);
+  });
+  const envRT = pmrem.fromScene(envScene, 0.04);
+  scene.environment = envRT.texture;
+  envScene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+  pmrem.dispose();
+  R.envRT = envRT;
+
+  world.ok = true;
+}
+
+/* ══════════════════════════════════════════ post-processing chain
+   scene → linear HDR target → bright pass → 2× separable blur → composite.
+   Everything the finish does (ACES, vignette, aberration, dither) happens in
+   ONE pass over the composed frame, never as a fix for a weak material. */
+const post = { rt: null, a: null, b: null, quad: null, cam: null, mats: {} };
+
+function makePost() {
+  const q = world.quality;
+  const dpr = world.renderer.getPixelRatio();
+  const w = Math.max(2, Math.floor(innerWidth * dpr));
+  const h = Math.max(2, Math.floor(innerHeight * dpr));
+  /* half-float so emitters can carry values above 1.0 into the bright pass */
+  const type = THREE.HalfFloatType;
+  const opts = { type, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+                 depthBuffer: true, stencilBuffer: false, colorSpace: THREE.NoColorSpace };
+  post.rt = new THREE.WebGLRenderTarget(w, h, opts);
+  const bw = Math.max(2, Math.floor(w * q.bloomScale));
+  const bh = Math.max(2, Math.floor(h * q.bloomScale));
+  const bopts = { ...opts, depthBuffer: false };
+  post.a = new THREE.WebGLRenderTarget(bw, bh, bopts);
+  post.b = new THREE.WebGLRenderTarget(bw, bh, bopts);
+
+  post.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const geo = new THREE.PlaneGeometry(2, 2);
+
+  post.mats.bright = new THREE.RawShaderMaterial({
+    uniforms: { tDiffuse: { value: null }, uThresh: { value: 0.62 }, uKnee: { value: 0.34 } },
+    vertexShader: `precision highp float; attribute vec3 position; attribute vec2 uv;
+      varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `precision highp float; varying vec2 vUv;
+      uniform sampler2D tDiffuse; uniform float uThresh, uKnee;
+      void main(){
+        vec3 c = texture2D(tDiffuse, vUv).rgb;
+        float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+        float s = clamp((l - uThresh) / max(uKnee, 1e-4), 0.0, 1.0);
+        gl_FragColor = vec4(c * s * s, 1.0);
+      }`
+  });
+
+  post.mats.blur = new THREE.RawShaderMaterial({
+    uniforms: { tDiffuse: { value: null }, uDir: { value: new THREE.Vector2(1, 0) },
+                uTexel: { value: new THREE.Vector2(1 / bw, 1 / bh) } },
+    vertexShader: `precision highp float; attribute vec3 position; attribute vec2 uv;
+      varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `precision highp float; varying vec2 vUv;
+      uniform sampler2D tDiffuse; uniform vec2 uDir, uTexel;
+      void main(){
+        vec2 o = uDir * uTexel;
+        vec3 c = texture2D(tDiffuse, vUv).rgb * 0.2270270270;
+        c += texture2D(tDiffuse, vUv + o*1.3846153846).rgb * 0.3162162162;
+        c += texture2D(tDiffuse, vUv - o*1.3846153846).rgb * 0.3162162162;
+        c += texture2D(tDiffuse, vUv + o*3.2307692308).rgb * 0.0702702703;
+        c += texture2D(tDiffuse, vUv - o*3.2307692308).rgb * 0.0702702703;
+        gl_FragColor = vec4(c, 1.0);
+      }`
+  });
+
+  post.mats.composite = new THREE.RawShaderMaterial({
+    uniforms: {
+      tDiffuse: { value: null }, tBloom: { value: null },
+      uBloom: { value: 0.62 }, uExposure: { value: 1.05 },
+      uVignette: { value: 1.0 }, uAberr: { value: 1.0 },
+      uDither: { value: 0.6 }, uTime: { value: 0 },
+      uGlitch: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) },
+      uAccent: { value: new THREE.Color(0x20a8d9) }, uAccentMix: { value: .08 }
+    },
+    vertexShader: `precision highp float; attribute vec3 position; attribute vec2 uv;
+      varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `precision highp float;
+      varying vec2 vUv;
+      uniform sampler2D tDiffuse, tBloom;
+      uniform float uBloom, uExposure, uVignette, uAberr, uDither, uTime, uGlitch;
+      uniform vec2 uRes; uniform vec3 uAccent; uniform float uAccentMix;
+      ${GLSL_BAYER}
+      float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+
+      /* Narkowicz ACES fit — cheap, and it holds the neon highlights instead
+         of clipping them to white */
+      vec3 aces(vec3 x){
+        const float a=2.51, b=0.03, c=2.43, d=0.59, e=0.14;
+        return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+      }
+      vec3 srgb(vec3 c){
+        return mix(12.92*c, 1.055*pow(max(c, 1e-5), vec3(1.0/2.4)) - 0.055, step(0.0031308, c));
+      }
+      void main(){
+        vec2 uv = vUv;
+        vec2 fromC = uv - 0.5;
+        float r2 = dot(fromC, fromC);
+
+        /* horizontal tear during a breach — a transport artefact, not decoration */
+        if (uGlitch > 0.001){
+          float band = step(0.86, h21(vec2(floor(uv.y*44.0), floor(uTime*22.0))));
+          uv.x += band * (h21(vec2(floor(uv.y*44.0), 3.0)) - 0.5) * 0.11 * uGlitch;
+        }
+
+        /* lateral chromatic separation that only bites toward the corners */
+        vec2 ab = fromC * r2 * uAberr * 0.0042 * (1.0 + uGlitch*7.0);
+        vec3 col;
+        col.r = texture2D(tDiffuse, uv + ab).r;
+        col.g = texture2D(tDiffuse, uv).g;
+        col.b = texture2D(tDiffuse, uv - ab).b;
+
+        /* Slightly split bloom behaves like printed-ink halation: cyan and
+           magenta fringes come from bright emitters, never the whole frame. */
+        vec2 px = 1.0 / max(uRes, vec2(1.0));
+        vec3 bloom = texture2D(tBloom, uv).rgb;
+        bloom.r = texture2D(tBloom, uv + vec2(1.6,0.0)*px).r;
+        bloom.b = texture2D(tBloom, uv - vec2(1.6,0.0)*px).b;
+        float bloomL = dot(bloom, vec3(0.2126,0.7152,0.0722));
+        col += bloom * uBloom;
+        col += uAccent * bloomL * uAccentMix;
+        col *= uExposure;
+        col = aces(col);
+        col = srgb(col);
+
+        float vig = smoothstep(0.92, 0.16, r2 * 1.65);
+        col *= mix(1.0, vig, uVignette);
+
+        /* the same 4×4 matrix the facades and the construct use, at 1/255 so
+           it kills banding in the fog without becoming a visible screen */
+        float b = bayer4(gl_FragCoord.xy);
+        col += (b - 0.5) * (uDither / 255.0) * 2.4;
+
+        gl_FragColor = vec4(col, 1.0);
+      }`
+  });
+
+  post.quad = new THREE.Mesh(geo, post.mats.composite);
+  post.scene = new THREE.Scene();
+  post.scene.add(post.quad);
+  post.mats.composite.uniforms.uRes.value.set(w, h);
+}
+
+function resizePost() {
+  if (!post.rt) return;
+  const dpr = world.renderer.getPixelRatio();
+  const w = Math.max(2, Math.floor(innerWidth * dpr));
+  const h = Math.max(2, Math.floor(innerHeight * dpr));
+  post.rt.setSize(w, h);
+  const bw = Math.max(2, Math.floor(w * world.quality.bloomScale));
+  const bh = Math.max(2, Math.floor(h * world.quality.bloomScale));
+  post.a.setSize(bw, bh); post.b.setSize(bw, bh);
+  post.mats.blur.uniforms.uTexel.value.set(1 / bw, 1 / bh);
+  post.mats.composite.uniforms.uRes.value.set(w, h);
+}
+
+function drawPost() {
+  const r = world.renderer;
+  r.setRenderTarget(post.rt);
+  r.clear();
+  r.render(world.scene, world.camera);
+
+  if (world.quality.bloom) {
+    post.quad.material = post.mats.bright;
+    post.mats.bright.uniforms.tDiffuse.value = post.rt.texture;
+    r.setRenderTarget(post.a); r.render(post.scene, post.cam);
+
+    post.quad.material = post.mats.blur;
+    post.mats.blur.uniforms.tDiffuse.value = post.a.texture;
+    post.mats.blur.uniforms.uDir.value.set(1, 0);
+    r.setRenderTarget(post.b); r.render(post.scene, post.cam);
+
+    post.mats.blur.uniforms.tDiffuse.value = post.b.texture;
+    post.mats.blur.uniforms.uDir.value.set(0, 1);
+    r.setRenderTarget(post.a); r.render(post.scene, post.cam);
+  }
+
+  post.quad.material = post.mats.composite;
+  post.mats.composite.uniforms.tDiffuse.value = post.rt.texture;
+  post.mats.composite.uniforms.tBloom.value = world.quality.bloom ? post.a.texture : post.rt.texture;
+  post.mats.composite.uniforms.uBloom.value = world.quality.bloom ? post.bloomAmt ?? 0.62 : 0;
+  r.setRenderTarget(null);
+  r.render(post.scene, post.cam);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CHAPTER LEDGER
+   Every chapter declares its own composition and world state. Nothing about
+   the journey is computed from CSS thresholds or from inside the render loop.
+   ══════════════════════════════════════════════════════════════════════ */
+const CHAPTERS = [
+  {
+    id: 'entry', label: 'Entry', accent: '#20a8d9', motion: { arc: 7, lift: 3, dolly: 5, roll: 0.012 },
+    cam: { p: [0, 76, 162], t: [0, 40, -92], fov: 38,
+           m: { p: [0, 88, 208], t: [0, 44, -92], fov: 52 } },
+    w: { fogD: 0.0042, fog: 0x0e1620, key: 1.0, grid: 0.3, rain: 0.0, motes: 0.34,
+         mono: 0.5, monoPow: 0.34, core: 0.3, ice: 0.1, bloom: 0.6, glow: 0.42, disc: 0.55,
+         lit: 0.32, warm: 0.85, stars: 0.55 }
+  },
+  {
+    id: 'matrix', label: 'The Matrix', accent: '#b7ca58', motion: { arc: -12, lift: 5, dolly: 10, roll: -0.025 },
+    cam: { p: [0, 70, 22], t: [0, 74, -168], fov: 46,
+           m: { p: [0, 76, 66], t: [0, 76, -168], fov: 60 } },
+    w: { fogD: 0.0040, fog: 0x08131c, key: 0.72, grid: 1.0, rain: 0.0, motes: 0.8,
+         mono: 0.35, monoPow: 0.3, core: 1.0, ice: 0.26, bloom: 0.86, glow: 0.3, disc: 0.3,
+         lit: 0.48, warm: 0.35, stars: 0.7 }
+  },
+  {
+    id: 'chiba', label: 'Chiba City', accent: '#f01570', motion: { arc: 5, lift: -1, dolly: 8, roll: 0.014 },
+    cam: { p: [5.2, 3.2, 80], t: [-2, 6.8, 24], fov: 54,
+           m: { p: [5.6, 3.4, 92], t: [-1, 7.5, 24], fov: 66 } },
+    w: { fogD: 0.0185, fog: 0x121a20, key: 0.5, grid: 0.1, rain: 1.0, motes: 0.24,
+         mono: 0.12, monoPow: 0.2, core: 0.2, ice: 0.08, bloom: 0.72, glow: 0.7, disc: 0.16,
+         lit: 0.62, warm: 1.0, stars: 0.12 }
+  },
+  {
+    id: 'run', label: 'The Run', accent: '#6a6e8a', motion: { arc: -16, lift: 6, dolly: 14, roll: -0.04 },
+    cam: { p: [70, 42, 40], t: [-34, 54, -76], fov: 48,
+           m: { p: [92, 46, 58], t: [-34, 54, -76], fov: 62 } },
+    w: { fogD: 0.0050, fog: 0x0c1420, key: 0.66, grid: 0.5, rain: 0.34, motes: 0.6,
+         mono: 0.3, monoPow: 0.34, core: 0.6, ice: 1.0, bloom: 0.8, glow: 0.34, disc: 0.3,
+         lit: 0.5, warm: 0.5, stars: 0.45 }
+  },
+  {
+    id: 'ghost', label: 'Machine Ghosts', accent: '#f01570', motion: { arc: 8, lift: 2, dolly: 7, roll: 0.028 },
+    cam: { p: [0, 29.5, -8], t: [0, 27, -54], fov: 40,
+           m: { p: [0, 30, 8], t: [0, 27, -54], fov: 54 } },
+    w: { fogD: 0.0115, fog: 0x0a1018, key: 0.42, grid: 0.42, rain: 0.12, motes: 0.9,
+         mono: 1.0, monoPow: 0.82, core: 0.5, ice: 0.3, bloom: 0.94, glow: 0.24, disc: 0.2,
+         lit: 0.42, warm: 0.3, stars: 0.4 }
+  },
+  {
+    id: 'afterimage', label: 'Afterimage', accent: '#20a8d9', motion: { arc: -18, lift: 14, dolly: 12, roll: -0.035 },
+    cam: { p: [12, 94, -36], t: [-92, 152, -252], fov: 50,
+           m: { p: [24, 104, 6], t: [-92, 152, -252], fov: 64 } },
+    w: { fogD: 0.0022, fog: 0x070d16, key: 1.15, grid: 0.24, rain: 0.0, motes: 0.5,
+         mono: 0.2, monoPow: 0.24, core: 0.42, ice: 0.14, bloom: 0.66, glow: 0.28, disc: 0.66,
+         lit: 0.72, warm: 0.6, stars: 1.0 }
+  },
+  {
+    id: 'appendix', label: 'Appendix', accent: '#b7ca58', motion: { arc: 4, lift: 6, dolly: 4, roll: 0.012 },
+    cam: { p: [0, 182, 104], t: [0, 46, -176], fov: 58,
+           m: { p: [0, 196, 150], t: [0, 46, -176], fov: 68 } },
+    w: { fogD: 0.0030, fog: 0x080e15, key: 0.9, grid: 0.6, rain: 0.06, motes: 0.42,
+         mono: 0.3, monoPow: 0.3, core: 0.6, ice: 0.18, bloom: 0.58, glow: 0.36, disc: 0.42,
+         lit: 0.58, warm: 0.7, stars: 0.8 }
+  }
+];
+
+const sections = $$('[data-cam]');
+const rig = {
+  exact: 0, smooth: 0, active: -1, dir: 1,
+  anchors: [], px: 0, py: 0, pointX: 0, pointY: 0,
+  scrollVel: 0, lastY: 0, lastStamp: performance.now()
+};
+
+/* ── camera rig ─────────────────────────────────────────────────────────
+   pathRig holds the authored composition; pointer parallax is applied as a
+   separate offset so it can never corrupt a waypoint. */
+const camPos = new THREE.Vector3();
+const camTgt = new THREE.Vector3();
+const camDir = new THREE.Vector3();
+const camSide = new THREE.Vector3();
+const camUp = new THREE.Vector3();
+let curve = null, curveT = null, tall = false;
+
+function camFor(i) {
+  const c = CHAPTERS[i].cam;
+  return tall && c.m ? { p: c.m.p, t: c.m.t ?? c.t, fov: c.m.fov } : { p: c.p, t: c.t, fov: c.fov };
+}
+function buildCurves() {
+  /* a tall or narrow viewport gets an authored pull-back, never a centre crop */
+  tall = innerWidth < 900 || innerWidth / innerHeight < 1.05;
+  curve  = new THREE.CatmullRomCurve3(CHAPTERS.map((_, i) => new THREE.Vector3(...camFor(i).p)), false, 'catmullrom', 0.4);
+  curveT = new THREE.CatmullRomCurve3(CHAPTERS.map((_, i) => new THREE.Vector3(...camFor(i).t)), false, 'catmullrom', 0.4);
+}
+
+/* ── scroll conductor ───────────────────────────────────────────────────
+   Native scroll is the source of truth. `exact` updates synchronously in the
+   scroll handler so the rail, readout and foreground never wait on a frame;
+   only the camera reads the damped value. */
+function measure() {
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  rig.anchors = sections.map((el, i) => {
+    if (i === 0) return 0;
+    if (i === sections.length - 1) return max;
+    const r = el.getBoundingClientRect();
+    return clamp(r.top + scrollY + r.height * 0.5 - innerHeight * 0.5, 0, max);
+  });
+  for (let i = 1; i < rig.anchors.length; i++) {
+    rig.anchors[i] = Math.max(rig.anchors[i], rig.anchors[i - 1] + 1);
+  }
+}
+function progressAt(y) {
+  const a = rig.anchors;
+  if (!a.length) return 0;
+  if (y <= a[0]) return 0;
+  for (let i = 0; i < a.length - 1; i++) {
+    if (y <= a[i + 1]) return i + clamp((y - a[i]) / Math.max(1, a[i + 1] - a[i]), 0, 1);
+  }
+  return a.length - 1;
+}
+function readScroll() {
+  const y = scrollY;
+  const now = performance.now();
+  const dt = Math.max(16, now - rig.lastStamp);
+  const instantVel = (y - rig.lastY) / dt;
+  rig.scrollVel = lerp(rig.scrollVel, clamp(instantVel, -3.2, 3.2), .34);
+  rig.lastY = y; rig.lastStamp = now;
+  const next = progressAt(y);
+  rig.dir = next >= rig.exact ? 1 : -1;
+  rig.exact = next;
+  const idx = clamp(Math.round(rig.exact), 0, CHAPTERS.length - 1);
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  railProg.style.height = `${clamp(y / max, 0, 1) * 100}%`;
+  /* Separate CSS depth planes give every section a foreground/midground
+     response while the WebGL camera moves behind them. Values are written as
+     concrete units so this also works in browsers without typed CSS math. */
+  sections.forEach((section, i) => {
+    const depth = clamp(rig.exact - i, -1, 1);
+    section.style.setProperty('--copy-shift', `${(-depth * 34).toFixed(2)}px`);
+    section.style.setProperty('--plate-shift', `${(depth * 46).toFixed(2)}px`);
+    section.style.setProperty('--plate-tilt', `${(depth * 1.8).toFixed(3)}deg`);
+    const stage = fgStages[i];
+    if (stage) $$('.fg-piece', stage).forEach((piece, k) => {
+      piece.style.setProperty('--fg-x', `${(depth * (k ? -18 : 18)).toFixed(2)}px`);
+      piece.style.setProperty('--fg-y', `${(depth * 24).toFixed(2)}px`);
+      piece.style.setProperty('--fg-s', `${(1 + Math.abs(depth) * .025).toFixed(4)}`);
+    });
+  });
+  if (idx !== rig.active) { rig.active = idx; onChapter(idx); }
+}
+
+/* ── world state interpolation ──────────────────────────────────────────
+   One resolve per frame, from the same progress everything else reads. */
+const tmpColA = new THREE.Color(), tmpColB = new THREE.Color();
+function applyWorldState(p) {
+  const R = world.registry;
+  const i = clamp(Math.floor(p), 0, CHAPTERS.length - 1);
+  const j = Math.min(CHAPTERS.length - 1, i + 1);
+  const rawT = clamp(p - i, 0, 1);
+  const t = rawT * rawT * (3 - 2 * rawT);
+  const a = CHAPTERS[i].w, b = CHAPTERS[j].w;
+  const L = (k) => lerp(a[k], b[k], t);
+
+  world.scene.fog.density = L('fogD');
+  tmpColA.setHex(a.fog); tmpColB.setHex(b.fog);
+  world.scene.fog.color.copy(tmpColA).lerp(tmpColB, t);
+
+  R.key.intensity = L('key') * 1.15;
+  R.fill.intensity = 0.42 + L('key') * 0.24;
+  R.rim.intensity = 0.2 + L('rain') * .42 + L('mono') * .24;
+  R.gridMat.uniforms.uAmt.value = L('grid');
+  R.rainMat.uniforms.uAmt.value = L('rain');
+  R.moteMat.uniforms.uAmt.value = L('motes') * 0.62;
+  R.monoMat.uniforms.uAmp.value = 0.3 + L('mono') * 0.85;
+  R.monoMat.uniforms.uPower.value = L('monoPow');
+  R.coreMat.uniforms.uAmt.value = L('core') * 0.7;
+  R.coreWire.material.opacity = 0.16 + L('core') * 0.5;
+  R.fortMat.opacity = 0.08 + L('core') * 0.34;
+  R.iceShellMat.uniforms.uAmt.value = L('ice') * (iceArmed ? 0.9 : 0.34);
+  R.skyMat.uniforms.uGlowAmt.value = L('glow');
+  R.skyMat.uniforms.uStars.value = L('stars');
+  R.discMat.opacity = L('disc') * 0.34;
+  R.facadeMat.uniforms.uLit.value = L('lit');
+  R.facadeMat.uniforms.uWarm.value = L('warm');
+  R.monoCage.material.opacity = 0.05 + L('mono') * 0.16;
+
+  /* practicals follow the chapter that justifies them */
+  R.bounce.intensity = L('core') * 340;
+  R.streetWarm.intensity = (1 - Math.min(1, Math.abs(p - 2))) * 90;
+  R.streetCold.intensity = (1 - Math.min(1, Math.abs(p - 2))) * 60;
+  R.chapterSpot.intensity = 95 + L('ice') * 220 + L('mono') * 150;
+  R.chapterSpot.color.setHex(i === 2 || i === 4 ? 0xf01570 : 0x20a8d9);
+
+  post.bloomAmt = L('bloom') * 0.72;
+  post.mats.composite.uniforms.uVignette.value = 0.82;
+  post.mats.composite.uniforms.uAberr.value = 1 + L('ice') * 1.4;
+  tmpColA.set(CHAPTERS[i].accent); tmpColB.set(CHAPTERS[j].accent);
+  post.mats.composite.uniforms.uAccent.value.copy(tmpColA).lerp(tmpColB, t);
+  post.mats.composite.uniforms.uAccentMix.value = .055 + L('bloom') * .055;
+
+  /* camera: sampled from the authored curves, then offset by parallax */
+  const easedP = i + t;
+  const u = easedP / (CHAPTERS.length - 1);
+  curve.getPoint(clamp(u, 0, 1), camPos);
+  curveT.getPoint(clamp(u, 0, 1), camTgt);
+  const fov = lerp(camFor(i).fov, camFor(j).fov, t);
+
+  /* Authored arc/lift/dolly beats are strongest between chapter lock-offs,
+     so each scroll segment travels through space instead of linearly blending
+     between seven static postcard cameras. */
+  const ma = CHAPTERS[i].motion, mb = CHAPTERS[j].motion;
+  const travel = Math.sin(rawT * Math.PI);
+  camDir.subVectors(camTgt, camPos).normalize();
+  camSide.crossVectors(camDir, world.camera.up).normalize();
+  camUp.crossVectors(camSide, camDir).normalize();
+  camPos.addScaledVector(camSide, lerp(ma.arc, mb.arc, t) * travel);
+  camPos.addScaledVector(camUp, lerp(ma.lift, mb.lift, t) * travel);
+  camPos.addScaledVector(camDir, lerp(ma.dolly, mb.dolly, t) * travel);
+
+  const par = drift ? 1 : 0.35;
+  world.camera.position.copy(camPos)
+    .addScaledVector(camSide, rig.px * 5.2 * par)
+    .addScaledVector(camUp, -rig.py * 3.4 * par)
+    .addScaledVector(camSide, clamp(rig.scrollVel * 1.9, -4.5, 4.5));
+  world.camera.lookAt(camTgt);
+  world.camera.rotateZ(lerp(ma.roll, mb.roll, t) * travel + clamp(rig.scrollVel * .006, -.018, .018));
+  if (Math.abs(world.camera.fov - fov) > 0.01) {
+    world.camera.fov = fov;
+    world.camera.updateProjectionMatrix();
+  }
+}
+
+/* ══════════════════════════════════════════ foreground cut-outs
+   Near-plane scenery generated on canvas. Each piece is a silhouette with a
+   rim light in the owning chapter's accent — never a rectangular card. */
+function fgCanvas(w, h) { const c = cvs(w, h); return [c, c.getContext('2d')]; }
+
+function rimStroke(x, pts, colour, width = 2, alpha = 0.85) {
+  x.save();
+  x.globalCompositeOperation = 'lighter';
+  x.strokeStyle = colour; x.lineWidth = width; x.globalAlpha = alpha;
+  x.shadowColor = colour; x.shadowBlur = 10;
+  x.beginPath(); x.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) x.lineTo(pts[i][0], pts[i][1]);
+  x.stroke(); x.restore();
+}
+function bodyFill(x, w, h) {
+  const g = x.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, '#0d1218'); g.addColorStop(0.55, '#070a0e'); g.addColorStop(1, '#030405');
+  x.fillStyle = g;
+}
+
+/* Finish every procedural cut-out through a dedicated alpha-matte pass.
+   Subpixel edges are feathered, then resolved with the same 4×4 ordered
+   matrix used in the 3D shaders. Sparse weathering is punched through only
+   after the mask, so scenery has chipped edges without acquiring a box. */
+function finishAlphaMask(canvas, seed) {
+  const W = canvas.width, H = canvas.height, x = canvas.getContext('2d');
+  const original = cvs(W, H), ox = original.getContext('2d');
+  ox.drawImage(canvas, 0, 0);
+  const matte = cvs(W, H), mx = matte.getContext('2d');
+  mx.filter = 'blur(.75px)'; mx.drawImage(original, 0, 0); mx.filter = 'none';
+  const img = mx.getImageData(0, 0, W, H), d = img.data;
+  const B = [0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+  for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
+    const k = (py * W + px) * 4, a = d[k + 3] / 255;
+    d[k] = d[k + 1] = d[k + 2] = 255;
+    d[k + 3] = a > (B[(py & 3) * 4 + (px & 3)] + .5) / 16 ? 255 : 0;
+  }
+  mx.putImageData(img, 0, 0);
+  x.clearRect(0, 0, W, H); x.drawImage(original, 0, 0);
+  x.globalCompositeOperation = 'destination-in'; x.drawImage(matte, 0, 0);
+  x.globalCompositeOperation = 'destination-out';
+  const rnd = mulberry32(seed + 9000);
+  x.strokeStyle = 'rgba(0,0,0,.2)';
+  for (let i = 0; i < 34; i++) {
+    const sx = rnd() * W, sy = rnd() * H, len = 5 + rnd() * 38;
+    x.lineWidth = .5 + rnd() * 1.2;
+    x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + len, sy + (rnd() - .5) * 4); x.stroke();
+  }
+  x.globalCompositeOperation = 'source-over';
+  return canvas;
+}
+
+/* rooftop parapet: masts, dish, cable swags */
+function fgAntenna(seed, accent) {
+  const W = 900, H = 620, [c, x] = fgCanvas(W, H);
+  const r = mulberry32(seed);
+  const deck = H * 0.62;
+  bodyFill(x, W, H); x.fillRect(0, deck, W, H - deck);
+  rimStroke(x, [[0, deck], [W, deck]], accent, 1.6, 0.5);
+  for (let i = 0; i < 5; i++) {                       /* masts */
+    const mx = 60 + r() * (W - 120), mh = 150 + r() * 300;
+    x.fillStyle = '#080b0f'; x.fillRect(mx - 3, deck - mh, 6, mh);
+    for (let k = 1; k < 5; k++) {                     /* cross braces */
+      const y = deck - mh * (k / 5);
+      x.fillRect(mx - 13, y, 26, 2.4);
+    }
+    rimStroke(x, [[mx - 3, deck - mh], [mx - 3, deck]], accent, 1.2, 0.42);
+    x.fillStyle = '#ff2a1c'; x.globalAlpha = 0.9;
+    x.beginPath(); x.arc(mx, deck - mh - 5, 3.4, 0, TAU); x.fill();
+    x.globalAlpha = 1;
+  }
+  const dx = 130 + r() * 200, dy = deck - 60;         /* dish */
+  x.fillStyle = '#080b0f';
+  x.beginPath(); x.ellipse(dx, dy, 74, 60, -0.32, 0, TAU); x.fill();
+  x.fillRect(dx - 4, dy, 8, 62);
+  rimStroke(x, [[dx - 60, dy - 34], [dx + 14, dy - 58], [dx + 62, dy - 6]], accent, 1.8, 0.6);
+  x.strokeStyle = 'rgba(10,13,17,1)'; x.lineWidth = 3;  /* cable swags */
+  for (let i = 0; i < 3; i++) {
+    const y0 = deck - 90 - i * 42;
+    x.beginPath(); x.moveTo(0, y0);
+    x.quadraticCurveTo(W * 0.5, y0 + 60 + i * 16, W, y0 - 14);
+    x.stroke();
+  }
+  for (let i = 0; i < 34; i++) {                       /* vent boxes */
+    const bx = r() * W, bw = 18 + r() * 46, bh = 10 + r() * 32;
+    x.fillStyle = '#070a0d'; x.fillRect(bx, deck - bh, bw, bh);
+    if (r() < 0.3) { x.fillStyle = accent; x.globalAlpha = 0.5; x.fillRect(bx + 3, deck - bh + 3, 4, 2); x.globalAlpha = 1; }
+  }
+  return c;
+}
+
+/* chain-link fence with weeds pushing through the kerb */
+function fgFence(seed, accent) {
+  const W = 900, H = 560, [c, x] = fgCanvas(W, H);
+  const r = mulberry32(seed);
+  const top = H * 0.22;
+  x.strokeStyle = 'rgba(150,168,178,.2)'; x.lineWidth = 1.1;
+  for (let i = -H; i < W + H; i += 17) {              /* diamond mesh */
+    x.beginPath(); x.moveTo(i, top); x.lineTo(i + (H - top), H); x.stroke();
+    x.beginPath(); x.moveTo(i, top); x.lineTo(i - (H - top), H); x.stroke();
+  }
+  x.fillStyle = '#05070a';                             /* posts */
+  for (let i = 0; i <= 5; i++) { const px = 20 + i * ((W - 40) / 5); x.fillRect(px - 4, top - 16, 8, H - top + 16); }
+  x.fillStyle = '#0a0e12'; x.fillRect(0, top - 14, W, 7);
+  rimStroke(x, [[0, top - 14], [W, top - 14]], accent, 1.6, 0.45);
+  for (let i = 0; i < 3; i++) {                        /* barbed strands */
+    const y = top - 26 - i * 11;
+    x.strokeStyle = 'rgba(140,158,168,.28)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(0, y); x.lineTo(W, y - 4); x.stroke();
+  }
+  const kerb = H * 0.86;                               /* weeds */
+  bodyFill(x, W, H); x.fillRect(0, kerb, W, H - kerb);
+  x.strokeStyle = '#0b1410'; x.lineWidth = 2.2;
+  for (let i = 0; i < 260; i++) {
+    const bx = r() * W, bh = 16 + r() * 62, lean = (r() - 0.5) * 34;
+    x.beginPath(); x.moveTo(bx, kerb + 6);
+    x.quadraticCurveTo(bx + lean * 0.4, kerb - bh * 0.55, bx + lean, kerb - bh);
+    x.strokeStyle = r() < 0.12 ? 'rgba(60,86,52,.5)' : '#0a1310';
+    x.stroke();
+  }
+  return c;
+}
+
+/* bundled conduit running out of frame */
+function fgPipes(seed, accent) {
+  const W = 860, H = 500, [c, x] = fgCanvas(W, H);
+  const r = mulberry32(seed);
+  for (let i = 0; i < 7; i++) {
+    const y = H * 0.42 + i * 26 + r() * 8;
+    const rad = 12 + r() * 15;
+    const g = x.createLinearGradient(0, y - rad, 0, y + rad);
+    g.addColorStop(0, '#161c22'); g.addColorStop(0.4, '#0a0e12'); g.addColorStop(1, '#050709');
+    x.fillStyle = g;
+    x.beginPath(); x.moveTo(0, y - rad);
+    x.quadraticCurveTo(W * 0.55, y - rad - 30 - i * 5, W, y - rad + 40);
+    x.lineTo(W, y + rad + 40);
+    x.quadraticCurveTo(W * 0.55, y + rad - 30 - i * 5, 0, y + rad);
+    x.closePath(); x.fill();
+    rimStroke(x, [[0, y - rad], [W * 0.5, y - rad - 24 - i * 4], [W, y - rad + 40]], accent, 1.3, 0.32);
+    for (let k = 0; k < 4; k++) {                      /* flange collars */
+      const t = 0.1 + k * 0.26, px = t * W;
+      x.fillStyle = '#11161b';
+      x.fillRect(px, y - rad - 6 - t * 30 - i * 3, 11, rad * 2 + 12);
+    }
+  }
+  x.fillStyle = '#04060a'; x.fillRect(0, H * 0.88, W, H);
+  return c;
+}
+
+/* rack elevation with live status LEDs */
+function fgRack(seed, accent) {
+  const W = 640, H = 620, [c, x] = fgCanvas(W, H);
+  const r = mulberry32(seed);
+  bodyFill(x, W, H);
+  x.fillRect(W * 0.1, H * 0.1, W * 0.8, H * 0.9);
+  rimStroke(x, [[W * 0.1, H * 0.1], [W * 0.9, H * 0.1]], accent, 2, 0.6);
+  rimStroke(x, [[W * 0.1, H * 0.1], [W * 0.1, H]], accent, 1.4, 0.32);
+  const rows = 17;
+  for (let i = 0; i < rows; i++) {
+    const y = H * 0.12 + i * ((H * 0.86) / rows);
+    x.fillStyle = '#0c1116'; x.fillRect(W * 0.12, y, W * 0.76, (H * 0.86) / rows - 4);
+    x.fillStyle = 'rgba(150,166,176,.09)'; x.fillRect(W * 0.12, y, W * 0.76, 1);
+    for (let k = 0; k < 9; k++) {
+      if (r() > 0.55) continue;
+      const on = r();
+      x.fillStyle = on < 0.16 ? '#f01570' : on < 0.55 ? accent : '#20a8d9';
+      x.globalAlpha = 0.5 + r() * 0.5;
+      x.fillRect(W * 0.15 + k * 12, y + 6, 5, 3);
+      x.globalAlpha = 1;
+    }
+  }
+  return c;
+}
+
+/* signage pylon cluster silhouetted against the strip */
+function fgPylon(seed, accent) {
+  const W = 520, H = 660, [c, x] = fgCanvas(W, H);
+  const r = mulberry32(seed);
+  const px = W * 0.5;
+  x.fillStyle = '#06090c'; x.fillRect(px - 9, H * 0.06, 18, H);
+  rimStroke(x, [[px - 9, H * 0.06], [px - 9, H]], accent, 1.4, 0.4);
+  const glyphs = '電脳千葉仁清黒氷回線';
+  for (let i = 0; i < 5; i++) {
+    const w = 90 + r() * 120, h = 46 + r() * 52;
+    const y = H * 0.1 + i * (H * 0.16);
+    const side = i % 2 ? -1 : 1;
+    const bx = side > 0 ? px + 6 : px - 6 - w;
+    x.fillStyle = '#080c10'; x.fillRect(bx, y, w, h);
+    x.strokeStyle = 'rgba(140,158,168,.16)'; x.lineWidth = 1; x.strokeRect(bx + 0.5, y + 0.5, w - 1, h - 1);
+    const ink = ['#f01570', '#20a8d9', accent, '#c9aea7'][(r() * 4) | 0];
+    x.save(); x.globalCompositeOperation = 'lighter';
+    x.shadowColor = ink; x.shadowBlur = 16; x.fillStyle = ink;
+    x.font = `${h * 0.6}px "Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif`;
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(glyphs[(r() * glyphs.length) | 0], bx + w / 2, y + h / 2);
+    x.restore();
+  }
+  return c;
+}
+
+/* orbital truss + solar panel edge */
+function fgTruss(seed, accent) {
+  const W = 940, H = 480, [c, x] = fgCanvas(W, H);
+  const r = mulberry32(seed);
+  const y0 = H * 0.55;
+  x.strokeStyle = '#0b1016'; x.lineWidth = 7;
+  x.beginPath(); x.moveTo(-20, y0 + 90); x.lineTo(W + 20, y0 - 40); x.stroke();
+  x.beginPath(); x.moveTo(-20, y0 + 140); x.lineTo(W + 20, y0 + 10); x.stroke();
+  x.lineWidth = 3;
+  for (let i = 0; i < 26; i++) {                       /* lattice */
+    const t = i / 25, px = -20 + t * (W + 40);
+    const ay = y0 + 90 - t * 130, by = y0 + 140 - t * 130;
+    x.beginPath(); x.moveTo(px, ay); x.lineTo(px + 36, by); x.stroke();
+    x.beginPath(); x.moveTo(px + 36, ay); x.lineTo(px, by); x.stroke();
+  }
+  rimStroke(x, [[-20, y0 + 90], [W + 20, y0 - 40]], accent, 1.6, 0.5);
+  for (let i = 0; i < 4; i++) {                        /* panels */
+    const bx = 40 + i * 230, by = y0 + 96 - (bx / W) * 122;
+    x.save(); x.translate(bx, by); x.rotate(-0.14);
+    x.fillStyle = '#070d14'; x.fillRect(0, 0, 190, 108);
+    x.strokeStyle = 'rgba(32,168,217,.18)'; x.lineWidth = 1;
+    for (let k = 1; k < 6; k++) { x.beginPath(); x.moveTo(k * 31, 0); x.lineTo(k * 31, 108); x.stroke(); }
+    for (let k = 1; k < 3; k++) { x.beginPath(); x.moveTo(0, k * 36); x.lineTo(190, k * 36); x.stroke(); }
+    x.strokeStyle = 'rgba(32,168,217,.44)'; x.lineWidth = 1.6; x.strokeRect(0, 0, 190, 108);
+    x.restore();
+  }
+  return c;
+}
+
+/* cracked slab + rebar */
+function fgRubble(seed, accent) {
+  const W = 900, H = 420, [c, x] = fgCanvas(W, H);
+  const r = mulberry32(seed);
+  const top = H * 0.44;
+  bodyFill(x, W, H);
+  x.beginPath(); x.moveTo(0, H); x.lineTo(0, top + 20);
+  for (let i = 0; i <= 22; i++) {
+    const px = (W / 22) * i;
+    x.lineTo(px, top + (fbm2(i * 0.34, seed) - 0.5) * 56);
+  }
+  x.lineTo(W, H); x.closePath(); x.fill();
+  x.strokeStyle = 'rgba(120,140,150,.1)'; x.lineWidth = 1;
+  for (let i = 0; i < 26; i++) {                       /* cracks */
+    let px = r() * W, py = top + r() * 40;
+    x.beginPath(); x.moveTo(px, py);
+    for (let k = 0; k < 6; k++) { px += (r() - 0.5) * 50; py += r() * 34; x.lineTo(px, py); }
+    x.stroke();
+  }
+  for (let i = 0; i < 9; i++) {                        /* rebar */
+    const bx = r() * W, bh = 30 + r() * 90;
+    x.strokeStyle = '#131a1e'; x.lineWidth = 3;
+    x.beginPath(); x.moveTo(bx, top + 24);
+    x.quadraticCurveTo(bx + (r() - 0.5) * 40, top - bh * 0.5, bx + (r() - 0.5) * 70, top - bh);
+    x.stroke();
+  }
+  rimStroke(x, [[0, top + 6], [W * 0.4, top - 10], [W * 0.72, top + 12], [W, top - 4]], accent, 1.4, 0.34);
+  return c;
+}
+
+/* stage ledger: which pieces each chapter parks at the bottom of the frame */
+const FG = [
+  [['antenna', 'fg-l', { w: 46, seed: 3 }], ['pylon', 'fg-r', { w: 20, seed: 9 }]],
+  [['truss', 'fg-r', { w: 40, seed: 12 }], ['rubble', 'fg-l', { w: 34, seed: 21 }]],
+  [['fence', 'fg-l', { w: 52, seed: 33 }], ['pylon', 'fg-r', { w: 24, seed: 44 }]],
+  [['pipes', 'fg-r', { w: 46, seed: 55 }], ['rubble', 'fg-l', { w: 30, seed: 61 }]],
+  [['rack', 'fg-l', { w: 26, seed: 72 }], ['pipes', 'fg-r', { w: 40, seed: 83 }]],
+  [['truss', 'fg-l', { w: 44, seed: 94 }], ['antenna', 'fg-r', { w: 32, seed: 101 }]],
+  [['rubble', 'fg-l', { w: 38, seed: 112 }], ['fence', 'fg-r', { w: 30, seed: 123 }]]
+];
+const FG_MAKERS = { antenna: fgAntenna, fence: fgFence, pipes: fgPipes, rack: fgRack, pylon: fgPylon, truss: fgTruss, rubble: fgRubble };
+
+const fgHost = $('#foreground');
+const fgStages = $$('.fg-stage');
+let fgLive = -1, fgRetireTimer = 0;
+
+function buildForeground() {
+  fgStages.forEach((stage, i) => {
+    const spec = FG[i] || [];
+    spec.forEach(([kind, side, opt]) => {
+      /* The canvas is mounted directly. Round-tripping through a lossy WebP
+         data URL flattens the cut-out alpha into a dark rectangle, and even
+         a lossless encode would cost main-thread time for nothing. */
+      const canvas = finishAlphaMask(FG_MAKERS[kind](opt.seed, CHAPTERS[i].accent), opt.seed);
+      canvas.setAttribute('aria-hidden', 'true');
+      const piece = document.createElement('div');
+      piece.className = `fg-piece ${side}`;
+      piece.style.width = `${opt.w}vw`;
+      piece.appendChild(canvas);
+      stage.appendChild(piece);
+    });
+    stage.hidden = true;
+  });
+}
+/* Inline styles are the fail-safe landing state; they must be cleared before
+   a class-driven transition can own the piece again. */
+function fgClear(stage) {
+  $$('.fg-piece', stage).forEach((p) => { p.style.opacity = ''; p.style.filter = ''; p.style.transform = ''; });
+}
+function fgSettle(stage) {
+  $$('.fg-piece', stage).forEach((p) => {
+    p.style.opacity = '1'; p.style.filter = 'none';
+    p.style.transform = 'translate3d(var(--fg-x,0),var(--fg-y,0),0) scale(var(--fg-s,1))';
+  });
+}
+
+function ownForeground(index) {
+  if (index === fgLive) return;
+  clearTimeout(fgRetireTimer);
+  const prev = fgStages[fgLive];
+  if (prev) {
+    fgClear(prev);
+    prev.classList.remove('live');
+    prev.classList.add('retiring');
+    const retiring = prev;
+    fgRetireTimer = setTimeout(() => {
+      retiring.classList.remove('retiring');
+      retiring.hidden = true;
+      fgClear(retiring);
+      if (retiring.dataset.home) {
+        const home = document.getElementById(retiring.dataset.home);
+        if (home) home.appendChild(retiring);
+      }
+    }, reduced ? 10 : 820);
+  }
+  fgLive = index;
+  const next = fgStages[index];
+  if (!next) return;
+  if (!next.dataset.home) next.dataset.home = next.closest('[data-cam]')?.id || '';
+  fgClear(next);
+  next.hidden = false;
+  fgHost.appendChild(next);
+  /* one frame so the transition has a start value to run from, a timer in
+     case rAF never comes, and a settle so scenery cannot stay half-arrived */
+  /* every deferred step re-checks ownership: a fast scroll can hand the
+     viewport on before these fire, and a stale timer must not re-arm a
+     stage that has already retired */
+  const live = () => { if (fgLive === index) next.classList.add('live'); };
+  requestAnimationFrame(() => requestAnimationFrame(live));
+  setTimeout(live, 80);
+  setTimeout(() => { if (fgLive === index) fgSettle(next); }, 1500);
+}
+
+/* ══════════════════════════════════════════ decrypt reveal
+   Two surfaces, one grammar, both following the canvasui.dev component:
+   1 · text resolves through a cipher wavefront when its chapter arrives
+   2 · a plate renders as scrambled ASCII until the cursor decrypts it
+   ══════════════════════════════════════════════════════════════════════ */
+const CIPHER = '!<>-_\\/[]{}=+*^?#$%&@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const pick = (r) => CIPHER[(r * CIPHER.length) | 0];
+
+function decryptText(el, opt = {}) {
+  const text = el.dataset.text ?? el.textContent;
+  el.dataset.text = text;
+  if (el.dataset.dcDone === '1') return;
+  el.dataset.dcDone = '1';
+
+  if (reduced) { el.textContent = text; return; }
+
+  const speed = opt.speed ?? 26;          /* ms per character of wavefront travel */
+  const dwell = opt.dwell ?? 380;         /* ms a character spends scrambling */
+  const flicker = opt.flicker ?? 1;
+
+  el.setAttribute('aria-label', text);
+  const holder = document.createElement('span');
+  holder.setAttribute('aria-hidden', 'true');
+  el.textContent = '';
+  el.appendChild(holder);
+
+  const chars = [...text];
+  const t0 = performance.now();
+  const total = chars.length * speed + dwell + 120;
+
+  /* Same contract as the reveals: rAF stops in a hidden tab, and a reader
+     must never come back to a heading still stuck in cipher. */
+  setTimeout(() => { holder.textContent = text; }, total + 600);
+
+  function frame(now) {
+    const e = now - t0;
+    let out = '';
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      if (ch === ' ') { out += ' '; continue; }
+      const start = i * speed;
+      if (e < start) out += Math.random() < 0.55 * flicker ? pick(Math.random()) : ' ';
+      else if (e < start + dwell) out += Math.random() < 0.82 * flicker ? pick(Math.random()) : ch;
+      else out += ch;
+    }
+    holder.textContent = out;
+    if (e < total) requestAnimationFrame(frame);
+    else holder.textContent = text;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ── cursor-proximity decrypt field ─────────────────────────────────────
+   The plate is drawn once; the field renders it as a cipher of ASCII cells
+   and opens a decrypted circle around the pointer with a flickering,
+   chromatically split wavefront. Defaults track the component's own.
+*/
+function createDecryptField(canvas, source, accent) {
+  const cfg = {
+    radius: 190, softness: 0.5, cell: 11, aspect: 0.75, colored: 0.82,
+    color: accent, edgeWidth: 0.2, edgeFlicker: 1, edgeGlow: 2, edgeTint: 0.75,
+    aberration: 7, passthrough: 0.22, scramble: 0.14, scrambleSpeed: 7, smoothing: 0.2
+  };
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const cipher = cvs(2, 2), cx = cipher.getContext('2d');
+  const masked = cvs(2, 2), mx = masked.getContext('2d');
+
+  let cols = 0, rows = 0, cw = 0, ch = 0, dpr = 1;
+  let cellCol = null, glyphs = null;
+  let px = -9999, py = -9999, tx = -9999, ty = -9999, inside = false;
+  let lastScramble = 0, running = false, raf = 0, last = 0, clock = 0;
+  /* A coarse pointer never hovers, so proximity alone would leave the plate
+     permanently enciphered and the still would never be seen. On touch the
+     wavefront drifts on its own and a tap re-centres it. */
+  const coarse = matchMedia('(pointer: coarse)').matches;
+
+  function layout() {
+    const r = canvas.getBoundingClientRect();
+    if (r.width < 4) return false;
+    dpr = Math.min(devicePixelRatio || 1, 1.6);
+    const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+    if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+    cipher.width = masked.width = W; cipher.height = masked.height = H;
+    ch = Math.max(5, cfg.cell * dpr);
+    cw = Math.max(4, ch * cfg.aspect);
+    cols = Math.ceil(W / cw); rows = Math.ceil(H / ch);
+
+    /* sample the still once per layout — the per-frame loop only reads arrays */
+    const small = cvs(cols, rows);
+    const sx = small.getContext('2d');
+    sx.drawImage(source, 0, 0, cols, rows);
+    cellCol = sx.getImageData(0, 0, cols, rows).data;
+    glyphs = new Uint8Array(cols * rows);
+    for (let i = 0; i < glyphs.length; i++) glyphs[i] = (Math.random() * CIPHER.length) | 0;
+    drawCipher();
+    /* Paint the idle state immediately. Setting canvas.width above cleared the
+       surface, and if the animation loop never runs — hidden tab, reduced
+       motion, a stalled frame — the plate would otherwise stay blank. */
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(source, 0, 0, W, H);
+    ctx.drawImage(cipher, 0, 0);
+    return true;
+  }
+
+  function drawCipher() {
+    const W = cipher.width, H = cipher.height;
+    cx.clearRect(0, 0, W, H);
+    cx.fillStyle = `rgba(4,6,10,${1 - cfg.passthrough})`;
+    cx.fillRect(0, 0, W, H);
+    cx.font = `${ch * 0.82}px "DM Mono",ui-monospace,monospace`;
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    const ac = hexRGB(cfg.color);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const i = y * cols + x, k = i * 4;
+      const lum = (cellCol[k] * 0.2126 + cellCol[k + 1] * 0.7152 + cellCol[k + 2] * 0.0722) / 255;
+      if (lum < 0.018) continue;                      /* leave the true blacks empty */
+      /* gamma-lifted: a linear ramp off these deliberately dark stills leaves
+         the cipher too faint to read as text at all */
+      const a = 0.26 + Math.pow(lum, 0.6) * 0.88;
+      const r = lerp(ac[0], cellCol[k], cfg.colored);
+      const g = lerp(ac[1], cellCol[k + 1], cfg.colored);
+      const b = lerp(ac[2], cellCol[k + 2], cfg.colored);
+      cx.fillStyle = `rgba(${r | 0},${g | 0},${b | 0},${Math.min(1, a)})`;
+      cx.fillText(CIPHER[glyphs[i]], x * cw + cw * 0.5, y * ch + ch * 0.5);
+    }
+  }
+
+  function scramble() {
+    const n = Math.max(1, (glyphs.length * cfg.scramble) | 0);
+    for (let k = 0; k < n; k++) {
+      glyphs[(Math.random() * glyphs.length) | 0] = (Math.random() * CIPHER.length) | 0;
+    }
+    drawCipher();
+  }
+
+  function frame(now) {
+    if (!running) return;
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min((now - (last || now)) / 1000, 1 / 20);
+    last = now;
+
+    if (!cols) { if (!layout()) return; }
+    clock += dt;
+
+    if (coarse && !inside) {
+      const W = canvas.width, H = canvas.height;
+      tx = W * (0.5 + 0.3 * Math.sin(clock * 0.42));
+      ty = H * (0.5 + 0.26 * Math.sin(clock * 0.29 + 1.1));
+    }
+
+    /* the circle eases toward the pointer — cfg.smoothing seconds to catch up */
+    const l = 1 - Math.exp(-(dt / Math.max(cfg.smoothing, 0.01)) * 3);
+    px += (tx - px) * l; py += (ty - py) * l;
+
+    if (now - lastScramble > 1000 / cfg.scrambleSpeed) { lastScramble = now; scramble(); }
+
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(source, 0, 0, W, H);
+
+    const R = (inside || coarse) ? cfg.radius * dpr * (coarse ? 1.25 : 1) : 0;
+    mx.clearRect(0, 0, W, H);
+    mx.drawImage(cipher, 0, 0);
+    if (R > 1) {
+      const inner = R * (1 - cfg.softness);
+      const g = mx.createRadialGradient(px, py, Math.max(0, inner), px, py, R);
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      mx.globalCompositeOperation = 'destination-out';
+      mx.fillStyle = g; mx.fillRect(0, 0, W, H);
+      mx.globalCompositeOperation = 'source-over';
+    }
+    ctx.drawImage(masked, 0, 0);
+
+    /* the wavefront itself: only the ring of cells is redrawn per frame */
+    if (R > 1) {
+      const band = R * cfg.edgeWidth;
+      const ac = hexRGB(cfg.color);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.font = `${ch * 0.82}px "DM Mono",ui-monospace,monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const x0 = clamp(Math.floor((px - R - band) / cw), 0, cols - 1);
+      const x1 = clamp(Math.ceil((px + R + band) / cw), 0, cols - 1);
+      const y0 = clamp(Math.floor((py - R - band) / ch), 0, rows - 1);
+      const y1 = clamp(Math.ceil((py + R + band) / ch), 0, rows - 1);
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const ccx = x * cw + cw * 0.5, ccy = y * ch + ch * 0.5;
+        const d = Math.hypot(ccx - px, ccy - py);
+        if (Math.abs(d - R) > band) continue;
+        const w = 1 - Math.abs(d - R) / band;
+        const gl = CIPHER[(Math.random() * CIPHER.length) | 0];
+        const a = Math.min(1, w * cfg.edgeGlow * 0.5 * (0.4 + Math.random() * 0.6 * cfg.edgeFlicker));
+        const off = cfg.aberration * dpr * w * 0.5;
+        ctx.fillStyle = `rgba(255,${(ac[1] * 0.4) | 0},${(ac[2] * 0.4) | 0},${a * 0.55})`;
+        ctx.fillText(gl, ccx - off, ccy);
+        ctx.fillStyle = `rgba(${(ac[0] * 0.3) | 0},${(ac[1] * 0.7) | 0},255,${a * 0.55})`;
+        ctx.fillText(gl, ccx + off, ccy);
+        ctx.fillStyle = `rgba(${ac[0]},${ac[1]},${ac[2]},${a})`;
+        ctx.fillText(gl, ccx, ccy);
+      }
+      ctx.restore();
+    }
+  }
+
+  /* Reduced motion keeps the picture and drops the theatre: the plate is
+     shown decrypted and still, rather than left as an animated cipher the
+     reader has to wave a cursor at to read. */
+  function showPlain() {
+    if (!cols && !layout()) return;
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(source, 0, 0, W, H);
+  }
+  function start() {
+    if (reduced) { showPlain(); return; }
+    if (running) return;
+    running = true; last = 0; raf = requestAnimationFrame(frame);
+  }
+  function stop() { running = false; cancelAnimationFrame(raf); }
+
+  canvas.addEventListener('pointermove', (e) => {
+    const r = canvas.getBoundingClientRect();
+    tx = (e.clientX - r.left) * dpr; ty = (e.clientY - r.top) * dpr;
+    if (!inside) { px = tx; py = ty; }
+    inside = true;
+  });
+  canvas.addEventListener('pointerleave', () => { inside = false; });
+  canvas.addEventListener('pointerdown', (e) => {
+    const r = canvas.getBoundingClientRect();
+    tx = (e.clientX - r.left) * dpr; ty = (e.clientY - r.top) * dpr;
+    px = tx; py = ty; inside = true;
+  });
+
+  /* step() renders exactly one frame on demand. Used by the debug surface to
+     inspect the wavefront without depending on requestAnimationFrame. */
+  function step(now = performance.now()) {
+    const wasRunning = running;
+    running = true;
+    frame(now);
+    cancelAnimationFrame(raf);
+    running = wasRunning;
+    if (wasRunning) raf = requestAnimationFrame(frame);
+  }
+  function point(x, y, snap = true) {
+    tx = x * dpr; ty = y * dpr;
+    if (snap) { px = tx; py = ty; }
+    inside = true;
+  }
+  return { start, stop, step, point, layout, relayout: () => { cols = 0; layout(); } };
+}
+function hexRGB(h) {
+  const v = parseInt(h.replace('#', ''), 16);
+  return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+}
+
+/* ══════════════════════════════════════════ chapter stills
+   Five composed frames, drawn once to an offscreen canvas. They are the
+   source image the decrypt field resolves to. */
+function drawStill(index, W, H) {
+  const c = cvs(W, H), x = c.getContext('2d');
+  const r = mulberry32(700 + index * 31);
+  const bg = x.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#080d14'); bg.addColorStop(0.6, '#050709'); bg.addColorStop(1, '#030406');
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+
+  const horizon = H * 0.62;
+  if (index === 0) {                                   /* nonspace lattice */
+    x.strokeStyle = 'rgba(183,202,88,.44)'; x.lineWidth = 1;
+    for (let i = -14; i <= 14; i++) {                  /* perspective grid */
+      x.beginPath(); x.moveTo(W / 2 + i * 16, horizon); x.lineTo(W / 2 + i * W * 0.16, H); x.stroke();
+    }
+    for (let i = 1; i < 16; i++) {
+      const t = Math.pow(i / 16, 2.1), y = horizon + t * (H - horizon);
+      x.globalAlpha = 0.16 + t * 0.5;
+      x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke();
+    }
+    x.globalAlpha = 1;
+    for (let i = 0; i < 11; i++) {                     /* corporate fortresses */
+      const bx = 40 + r() * (W - 120), bw = 26 + r() * 80, bh = 40 + r() * 190;
+      x.strokeStyle = i % 3 ? 'rgba(32,168,217,.56)' : 'rgba(183,202,88,.58)';
+      x.lineWidth = 1.1; x.strokeRect(bx, horizon - bh, bw, bh);
+      x.beginPath(); x.moveTo(bx, horizon - bh); x.lineTo(bx + bw * 0.3, horizon - bh - 22);
+      x.lineTo(bx + bw + bw * 0.3, horizon - bh - 22); x.lineTo(bx + bw, horizon - bh); x.stroke();
+    }
+    const g = x.createRadialGradient(W * 0.5, horizon - 90, 4, W * 0.5, horizon - 90, 150);
+    g.addColorStop(0, 'rgba(183,202,88,.58)'); g.addColorStop(1, 'rgba(183,202,88,0)');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+  } else if (index === 1) {                            /* Ninsei, wet */
+    for (let i = 0; i < 26; i++) {                     /* block silhouettes */
+      const bw = 30 + r() * 80, bx = r() * W, bh = 60 + r() * 260;
+      x.fillStyle = `rgba(${8 + r() * 8 | 0},${11 + r() * 8 | 0},${15 + r() * 9 | 0},1)`;
+      x.fillRect(bx, horizon - bh, bw, bh);
+    }
+    for (let i = 0; i < 22; i++) {                     /* neon */
+      const sx = r() * W, sy = horizon - 40 - r() * 210;
+      const ink = ['#f01570', '#20a8d9', '#b7ca58', '#c9aea7', '#6a6e8a'][(r() * 5) | 0];
+      x.save(); x.shadowColor = ink; x.shadowBlur = 22; x.fillStyle = ink;
+      x.globalAlpha = 0.6 + r() * 0.4;
+      if (r() < 0.5) x.fillRect(sx, sy, 3, 22 + r() * 54);
+      else x.fillRect(sx, sy, 22 + r() * 60, 3);
+      x.restore();
+    }
+    const road = x.createLinearGradient(0, horizon, 0, H);   /* wet reflection */
+    road.addColorStop(0, 'rgba(24,30,36,1)'); road.addColorStop(1, 'rgba(5,7,9,1)');
+    x.fillStyle = road; x.fillRect(0, horizon, W, H - horizon);
+    for (let i = 0; i < 34; i++) {
+      const sx = r() * W, ink = ['#f01570', '#20a8d9', '#c9aea7'][(r() * 3) | 0];
+      x.globalAlpha = 0.1 + r() * 0.22; x.fillStyle = ink;
+      x.fillRect(sx, horizon + r() * (H - horizon), 2, 20 + r() * 90);
+    }
+    x.globalAlpha = 1;
+    x.strokeStyle = 'rgba(180,205,220,.16)'; x.lineWidth = 1;  /* rain */
+    for (let i = 0; i < 240; i++) {
+      const sx = r() * W, sy = r() * H;
+      x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx - 3, sy + 16 + r() * 22); x.stroke();
+    }
+  } else if (index === 2) {                            /* the route */
+    x.strokeStyle = 'rgba(106,110,138,.3)'; x.lineWidth = 1;
+    for (let i = 0; i < 26; i++) {                     /* circuit traces */
+      let sx = r() * W, sy = r() * H;
+      x.beginPath(); x.moveTo(sx, sy);
+      for (let k = 0; k < 5; k++) {
+        if (r() < 0.5) sx += (r() - 0.5) * 200; else sy += (r() - 0.5) * 160;
+        x.lineTo(sx, sy);
+      }
+      x.stroke();
+    }
+    const route = [[W * 0.08, H * 0.8], [W * 0.3, H * 0.55], [W * 0.46, H * 0.66],
+                   [W * 0.68, H * 0.3], [W * 0.9, H * 0.42]];
+    x.save(); x.shadowColor = '#20a8d9'; x.shadowBlur = 18;
+    x.strokeStyle = '#6a6e8a'; x.lineWidth = 2.2;
+    x.beginPath(); x.moveTo(route[0][0], route[0][1]);
+    route.slice(1).forEach(p => x.lineTo(p[0], p[1])); x.stroke();
+    route.forEach(([sx, sy], i) => {
+      x.fillStyle = i === route.length - 1 ? '#f01570' : '#20a8d9';
+      x.beginPath(); x.arc(sx, sy, i === route.length - 1 ? 9 : 6, 0, TAU); x.fill();
+    });
+    x.restore();
+    x.strokeStyle = 'rgba(220,216,202,.2)'; x.lineWidth = 1;
+    x.setLineDash([4, 6]);
+    x.strokeRect(W * 0.62, H * 0.2, W * 0.32, H * 0.34);
+    x.setLineDash([]);
+  } else if (index === 3) {                            /* the eye */
+    const cxp = W * 0.5, cyp = H * 0.48;
+    for (let i = 7; i >= 1; i--) {
+      x.strokeStyle = `rgba(32,168,217,${0.06 + i * 0.035})`;
+      x.lineWidth = 1.2;
+      x.beginPath(); x.ellipse(cxp, cyp, i * (W * 0.062), i * (H * 0.05), 0, 0, TAU); x.stroke();
+    }
+    const g = x.createRadialGradient(cxp, cyp, 2, cxp, cyp, W * 0.2);
+    g.addColorStop(0, 'rgba(224,223,217,.85)'); g.addColorStop(0.28, 'rgba(32,168,217,.4)');
+    g.addColorStop(1, 'rgba(32,168,217,0)');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#04070a'; x.beginPath(); x.arc(cxp, cyp, W * 0.045, 0, TAU); x.fill();
+    for (let i = 0; i < 64; i++) {                     /* iris fibres */
+      const a = (i / 64) * TAU + r() * 0.05;
+      x.strokeStyle = `rgba(150,230,255,${0.08 + r() * 0.22})`; x.lineWidth = 1;
+      x.beginPath();
+      x.moveTo(cxp + Math.cos(a) * W * 0.05, cyp + Math.sin(a) * W * 0.05);
+      x.lineTo(cxp + Math.cos(a) * W * (0.15 + r() * 0.06), cyp + Math.sin(a) * W * (0.15 + r() * 0.06));
+      x.stroke();
+    }
+    x.globalAlpha = 0.5; x.fillStyle = '#000';
+    for (let y = 0; y < H; y += 4) x.fillRect(0, y, W, 1.6);
+    x.globalAlpha = 1;
+  } else {                                             /* orbit, afterimage */
+    const g = x.createRadialGradient(W * 0.24, H * 1.05, W * 0.2, W * 0.24, H * 1.05, W * 0.86);
+    g.addColorStop(0, 'rgba(30,60,86,.9)'); g.addColorStop(0.5, 'rgba(12,26,40,.5)');
+    g.addColorStop(1, 'rgba(4,7,11,0)');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(32,168,217,.56)'; x.lineWidth = 2;   /* earth limb */
+    x.beginPath(); x.arc(W * 0.24, H * 1.05, W * 0.62, Math.PI * 1.08, Math.PI * 1.92); x.stroke();
+    for (let i = 0; i < 190; i++) {                    /* city lights on the limb */
+      const a = Math.PI * (1.08 + r() * 0.84), rad = W * 0.62 - r() * 26;
+      x.fillStyle = `rgba(255,${170 + r() * 60 | 0},${90 + r() * 60 | 0},${0.2 + r() * 0.55})`;
+      x.fillRect(W * 0.24 + Math.cos(a) * rad, H * 1.05 + Math.sin(a) * rad, 1.6, 1.6);
+    }
+    for (let i = 0; i < 150; i++) {                    /* stars */
+      x.fillStyle = `rgba(220,230,240,${0.15 + r() * 0.6})`;
+      x.fillRect(r() * W, r() * H * 0.72, 1.3, 1.3);
+    }
+    x.save(); x.translate(W * 0.74, H * 0.36); x.rotate(0.4);   /* spindle */
+    x.fillStyle = '#0d141b'; x.fillRect(-26, -110, 52, 220);
+    x.strokeStyle = 'rgba(220,216,202,.32)'; x.lineWidth = 1.4; x.strokeRect(-26, -110, 52, 220);
+    x.save(); x.shadowColor = '#f01570'; x.shadowBlur = 16; x.fillStyle = '#f01570';
+    for (let i = -2; i <= 2; i++) x.fillRect(-26, i * 46 - 3, 52, 6);
+    x.restore();
+    for (let i = -2; i <= 2; i++) { x.strokeStyle = 'rgba(220,216,202,.22)'; x.beginPath(); x.ellipse(0, i * 46, 34, 8, 0, 0, TAU); x.stroke(); }
+    x.restore();
+  }
+
+  /* shared finish: haze, vignette, scanlines — the same grammar as the world */
+  const haze = x.createLinearGradient(0, 0, 0, H);
+  haze.addColorStop(0, 'rgba(10,18,26,.22)'); haze.addColorStop(1, 'rgba(3,5,8,.4)');
+  x.fillStyle = haze; x.fillRect(0, 0, W, H);
+  const vg = x.createRadialGradient(W / 2, H / 2, W * 0.28, W / 2, H / 2, W * 0.74);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)');
+  x.fillStyle = vg; x.fillRect(0, 0, W, H);
+  x.globalAlpha = 0.16; x.fillStyle = '#000';
+  for (let y = 0; y < H; y += 3) x.fillRect(0, y, W, 1);
+  x.globalAlpha = 1;
+  return c;
+}
+
+/* ══════════════════════════════════════════ dither field (appendix) */
+function initDither(canvas) {
+  const ctx = canvas.getContext('2d', { alpha: true });
+  if (!ctx) return;
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + 0.5) / 16);
+  const palette = [[4, 5, 7], [14, 17, 20], [32, 38, 42], [70, 78, 80], [150, 160, 152], [186, 255, 24]];
+  const cell = 7;
+  let cols = 1, rows = 1, raf = 0, t = 0, visible = false;
+
+  function size() {
+    const r = canvas.getBoundingClientRect();
+    if (r.width < 4) return false;
+    cols = Math.max(2, Math.ceil(r.width / cell));
+    rows = Math.max(2, Math.ceil(r.height / cell));
+    canvas.width = cols; canvas.height = rows;
+    canvas.style.width = '100%'; canvas.style.height = '100%';
+    ctx.imageSmoothingEnabled = false;
+    return true;
+  }
+  function draw() {
+    const img = ctx.createImageData(cols, rows), d = img.data;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const u = x / cols, v = y / rows;
+      /* broad organic masses, not TV noise */
+      let n = fbm2(u * 3.4 + t * 0.09, v * 2.6 - t * 0.05, 4);
+      n += 0.34 * Math.sin(u * 5.2 + t * 0.22) * Math.cos(v * 3.6 - t * 0.16);
+      const vig = 1 - Math.hypot(u - 0.66, v - 0.5) * 1.25;
+      let lum = clamp((n - 0.28) * 2.15 * clamp(vig, 0, 1), 0, 1);
+      const th = BAYER[(y % 4) * 4 + (x % 4)];
+      const lvl = clamp(Math.floor(lum * (palette.length - 1) + th), 0, palette.length - 1);
+      const c = palette[lvl];
+      const k = (y * cols + x) * 4;
+      d[k] = c[0]; d[k + 1] = c[1]; d[k + 2] = c[2];
+      d[k + 3] = lvl === 0 ? 0 : 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    if (!visible) return;
+    t += reduced ? 0 : 0.016;
+    draw();
+  }
+  if (!size()) return;
+  draw();
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { rootMargin: '120px' }).observe(canvas);
+  addEventListener('resize', () => { if (size()) draw(); }, { passive: true });
+  if (!reduced) raf = requestAnimationFrame(loop);
+}
+
+/* ══════════════════════════════════════════ DOM: reveals, rail, readout */
+const railNav = $('#railNav'), railProg = $('#railProg'), readout = $('#readout');
+const LABELS = ['ENTRY PROTOCOL', 'THE MATRIX · NONSPACE', 'CHIBA CITY · NINSEI',
+                'THE RUN · FREESIDE VECTOR', 'MACHINE GHOSTS · TESSIER-ASHPOOL',
+                'AFTERIMAGE · SIGNAL ACTIVE', 'APPENDIX · LOCAL ROM'];
+
+sections.forEach((s, i) => {
+  const a = document.createElement('a');
+  a.href = `#${s.id}`;
+  a.textContent = String(i).padStart(2, '0');
+  a.setAttribute('aria-label', `Chapter ${i}: ${s.dataset.label}`);
+  railNav.appendChild(a);
+});
+const railLinks = $$('a', railNav);
+
+function onChapter(i) {
+  railLinks.forEach((a, k) => a.setAttribute('aria-current', k === i ? 'true' : 'false'));
+  readout.textContent = `${String(i).padStart(2, '0')} // ${LABELS[i]} · ${(35.6812 + i * 0.731).toFixed(4)} · ${(139.7671 - i * 2.171).toFixed(4)}`;
+  document.documentElement.style.setProperty('--accent', CHAPTERS[i].accent);
+  ownForeground(i);
+}
+
+/* word splitting — the accessible phrase is preserved on the element */
+function splitWords(el) {
+  if (el.dataset.split === '1') return;
+  el.dataset.split = '1';
+  const label = el.textContent.replace(/\s+/g, ' ').trim();
+  el.setAttribute('aria-label', label);
+  let n = 0;
+  const walk = (node) => {
+    Array.from(node.childNodes).forEach((child) => {
+      if (child.nodeType === 3) {
+        const parts = child.textContent.split(/(\s+)/).filter(Boolean);
+        const frag = document.createDocumentFragment();
+        parts.forEach((p) => {
+          if (/^\s+$/.test(p)) { frag.appendChild(document.createTextNode(' ')); return; }
+          const wrap = document.createElement('span');
+          wrap.className = 'wsplit'; wrap.setAttribute('aria-hidden', 'true');
+          const inner = document.createElement('i');
+          inner.textContent = p;
+          inner.style.setProperty('--i', n++);
+          wrap.appendChild(inner);
+          frag.appendChild(wrap);
+        });
+        child.replaceWith(frag);
+      } else if (child.nodeType === 1) walk(child);
+    });
+  };
+  walk(el);
+}
+$$('[data-split]').forEach(splitWords);
+
+/* Fail-safe settle. A reveal must never be the only thing standing between
+   the reader and the words: if the transition is starved — hidden tab, an
+   embedded webview, a compositor that drops it — the final state is written
+   directly a beat after it was due. When the transition did play this is a
+   no-op, because it writes exactly the value the transition ended on. */
+function settle(el) {
+  const delay = parseFloat(getComputedStyle(el).getPropertyValue('--d')) || 0;
+  const words = $$('.wsplit i', el);
+  const lastWord = words.length ? +words[words.length - 1].style.getPropertyValue('--i') || 0 : 0;
+  setTimeout(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'none';
+    words.forEach((w) => { w.style.transform = 'none'; });
+  }, 1250 + delay + lastWord * 68);
+}
+
+const revealer = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('seen');
+    settle(e.target);
+    revealer.unobserve(e.target);
+    $$('[data-decrypt]', e.target).concat(e.target.matches('[data-decrypt]') ? [e.target] : [])
+      .forEach((el, i) => setTimeout(() => decryptText(el), i * 90));
+  });
+}, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+$$('[data-reveal]').forEach((el) => revealer.observe(el));
+/* decrypt targets that are not themselves reveal items */
+$$('[data-decrypt]').forEach((el) => { if (!el.closest('[data-reveal]')) revealer.observe(el); });
+
+/* ══════════════════════════════════════════ plates */
+const fields = [];
+
+/* Size the backing store to the element and draw the still into it. Setting
+   canvas.width is itself a clear, so the two always happen together. */
+function paintStill(canvas, still) {
+  const r = canvas.getBoundingClientRect();
+  const dpr = Math.min(devicePixelRatio || 1, 1.6);
+  const W = Math.max(2, Math.round((r.width || 640) * dpr));
+  const H = Math.max(2, Math.round((r.height || 480) * dpr));
+  if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+  const ctx = canvas.getContext('2d');
+  if (ctx) ctx.drawImage(still, 0, 0, W, H);
+}
+$$('.plate').forEach((plate) => {
+  const idx = +plate.dataset.plate;
+  const canvas = $('.plate-canvas', plate);
+  const still = drawStill(idx, 1024, 768);
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label',
+    ['Wireframe data fortresses standing on a luminous grid horizon.',
+     'A wet Ninsei street under neon signage and static rain.',
+     'A non-linear route traced across a circuit field toward a marked target.',
+     'A concentric machine iris looking back through scan lines.',
+     'The Freeside spindle in orbit above a lit earth limb.'][idx]);
+  /* The still is committed to the canvas synchronously, here, before any
+     observer or animation frame exists. The cipher is an enhancement layered
+     on top: if IntersectionObserver is throttled or rAF never runs, the
+     reader still gets the picture rather than an empty frame. */
+  paintStill(canvas, still);
+  const field = createDecryptField(canvas, still, CHAPTERS[idx + 1].accent);
+  fields.push({ plate, field, still, canvas });
+  field.layout();
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting) { field.layout(); field.start(); } else field.stop();
+  }, { rootMargin: '160px' }).observe(plate);
+});
+
+/* tactile card tilt, fine pointers only */
+$$('.plate').forEach((card) => {
+  card.addEventListener('pointermove', (e) => {
+    if (reduced || matchMedia('(pointer: coarse)').matches) return;
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+    card.style.transform = `perspective(900px) rotateY(${x * 3.4}deg) rotateX(${-y * 3.4}deg)`;
+  });
+  card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+});
+
+initDither($('[data-dither]'));
+
+/* ══════════════════════════════════════════ interface state */
+let drift = true, iceArmed = false, glitch = 0;
+const btnDrift = $('#btnDrift'), btnIce = $('#btnIce'), btnBreach = $('#btnBreach');
+btnDrift.addEventListener('click', () => {
+  drift = !drift; btnDrift.setAttribute('aria-pressed', String(drift));
+});
+btnIce.addEventListener('click', () => {
+  iceArmed = !iceArmed; btnIce.setAttribute('aria-pressed', String(iceArmed));
+  if (world.ok) {
+    world.registry.fortMat.color.set(iceArmed ? 0xf01570 : 0x20a8d9);
+    world.registry.iceShellMat.uniforms.uCol.value.set(iceArmed ? 0xf01570 : 0x20a8d9);
+  }
+});
+function breach() {
+  const el = $('#flash');
+  el.classList.remove('fire'); void el.offsetWidth; el.classList.add('fire');
+  glitch = 1;
+  if (world.ok) world.registry.monoMat.uniforms.uAmp.value += 2.4;
+}
+btnBreach.addEventListener('click', breach);
+
+const navToggle = $('#navToggle'), acts = $('#acts');
+navToggle.addEventListener('click', () => {
+  const open = acts.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', String(open));
+});
+$$('#acts button').forEach(b => b.addEventListener('click', () => {
+  if (innerWidth <= 860) { acts.classList.remove('open'); navToggle.setAttribute('aria-expanded', 'false'); }
+}));
+
+/* custom cursor */
+const cur = $('.cur'), curRing = $('.cur-ring');
+let mx2 = innerWidth / 2, my2 = innerHeight / 2, rx = mx2, ry = my2;
+if (matchMedia('(pointer: fine)').matches) {
+  document.body.classList.add('cursor-on');
+  addEventListener('pointermove', (e) => {
+    mx2 = e.clientX; my2 = e.clientY;
+    cur.style.transform = `translate3d(${mx2}px,${my2}px,0) translate(-50%,-50%)`;
+  }, { passive: true });
+  $$('a,button,input,.plate').forEach((el) => {
+    el.addEventListener('pointerenter', () => document.body.classList.add('hot'));
+    el.addEventListener('pointerleave', () => document.body.classList.remove('hot'));
+  });
+  /* the ring lags the dot on its own loop, so it keeps easing even when the
+     world loop is paused on a hidden tab or missing entirely */
+  (function ringLoop() {
+    requestAnimationFrame(ringLoop);
+    rx += (mx2 - rx) * 0.17; ry += (my2 - ry) * 0.17;
+    curRing.style.transform = `translate3d(${rx}px,${ry}px,0) translate(-50%,-50%)`;
+  })();
+}
+addEventListener('pointermove', (e) => {
+  rig.pointX = e.clientX; rig.pointY = e.clientY;
+  rig.px = e.clientX / innerWidth - 0.5;
+  rig.py = e.clientY / innerHeight - 0.5;
+}, { passive: true });
+
+/* ══════════════════════════════════════════ five transmissions
+   Every channel is synthesised live; nothing is sampled or downloaded. */
+const CHANNELS = [
+  { title: 'AULOS', suffix: 'DELPHIC CIRCUIT', meta: 'DOUBLE-REED / DORIAN', desc: 'paired pipes · ritual drone · ancient signal', mode: 'AULOS' },
+  { title: 'DATA CATHEDRAL', suffix: '84', meta: 'FM BELLS / ARPEGGIO', desc: 'glassy packets · slow machine psalm', mode: 'FM' },
+  { title: 'BLACK ICE', suffix: 'COUNTERMEASURE', meta: 'INDUSTRIAL / 92 BPM', desc: 'cold pulse · firewall pressure', mode: 'ICE' },
+  { title: 'CIPHER MONK', suffix: 'ZERO KNOWLEDGE', meta: 'ENCRYPTED / POLYRHYTHM', desc: 'modem ghosts · coded percussion', mode: 'CIPHER' },
+  { title: 'CHIBA RAIN', suffix: 'NIGHT MARKET', meta: 'NOIR / TAPE WEATHER', desc: 'detuned pads · rain static · bass', mode: 'RAIN' }
+];
+let ac = null, master = null, analyser = null, noiseBuf = null;
+let playing = false, timer = 0, track = 0, voices = [];
+const playBtn = $('#playBtn'), gainInput = $('#gain'), chTitle = $('#chTitle'), chMeta = $('#chMeta');
+const drawer = $('#drawer'), chanList = $('#chanList'), chanBtn = $('#chanBtn');
+
+CHANNELS.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'chan'; b.type = 'button';
+  b.setAttribute('aria-current', 'false');
+  b.innerHTML = `<span class="n">0${i + 1}</span><span><b></b><small></small></span><span class="m"></span>`;
+  $('b', b).textContent = `${s.title} // ${s.suffix}`;
+  $('small', b).textContent = s.desc;
+  $('.m', b).textContent = s.mode;
+  b.addEventListener('click', () => selectTrack(i, true));
+  chanList.appendChild(b);
+});
+$('#vizIdx').innerHTML = CHANNELS.map((_, i) => `<span>0${i + 1}</span>`).join('');
+
+function initAudio() {
+  if (ac) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  ac = new Ctx();
+  master = ac.createGain(); master.gain.value = +gainInput.value;
+  analyser = ac.createAnalyser(); analyser.fftSize = 256;
+  master.connect(analyser); analyser.connect(ac.destination);
+  noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  drawViz();
+}
+function chain(wet = 0.22, time = 0.36) {
+  const input = ac.createGain(), delay = ac.createDelay(2);
+  const fb = ac.createGain(), wetG = ac.createGain();
+  delay.delayTime.value = time; fb.gain.value = 0.31; wetG.gain.value = wet;
+  input.connect(master); input.connect(delay);
+  delay.connect(fb); fb.connect(delay); delay.connect(wetG); wetG.connect(master);
+  return input;
+}
+function env(g, t, a, d, level) {
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(Math.max(level, 0.0002), t + a);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+}
+function osc(freq, type, t, dest, dur, gain = 0.04, detune = 0) {
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = freq; o.detune.value = detune;
+  env(g, t, 0.03, dur, gain);
+  o.connect(g); g.connect(dest);
+  o.start(t); o.stop(t + dur + 0.05); voices.push(o);
+}
+function noise(t, dur, dest, gain = 0.015, cut = 1800) {
+  const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  s.buffer = noiseBuf; f.type = 'lowpass'; f.frequency.value = cut;
+  env(g, t, 0.02, dur, gain);
+  s.connect(f); f.connect(g); g.connect(dest);
+  s.start(t); s.stop(t + dur + 0.04); voices.push(s);
+}
+function aulos(t) {
+  const out = chain(0.28, 0.43), notes = [146.83, 164.81, 174.61, 196, 220, 196, 174.61, 164.81];
+  osc(73.42, 'sawtooth', t, out, 7.6, 0.018); osc(74.1, 'square', t, out, 7.6, 0.006);
+  notes.forEach((f, i) => {
+    const st = t + i * 0.72;
+    osc(f, 'sawtooth', st, out, 0.65, 0.025, -7);
+    osc(f * 1.004, 'square', st, out, 0.6, 0.012, 7);
+    osc(f * 2, 'sine', st, out, 0.5, 0.009);
+    noise(st, 0.38, out, 0.004, 1100);
+  });
+}
+function cathedral(t) {
+  const out = chain(0.38, 0.56), notes = [110, 138.59, 164.81, 220, 277.18, 329.63, 277.18, 220];
+  notes.forEach((f, i) => {
+    const st = t + i * 0.55;
+    osc(f, 'sine', st, out, 1.7, 0.036); osc(f * 2.01, 'sine', st, out, 0.9, 0.011);
+  });
+  [55, 82.41, 110].forEach(f => osc(f, 'triangle', t, out, 5, 0.012));
+}
+function blackIce(t) {
+  const out = chain(0.12, 0.19), beat = 0.652;
+  for (let i = 0; i < 12; i++) {
+    const st = t + i * beat / 2;
+    osc(i % 4 ? 55 : 41.2, 'square', st, out, 0.18, i % 4 ? 0.018 : 0.045);
+    if (i % 2 === 0) noise(st, 0.11, out, 0.018, 900);
+    if (i % 4 === 2) osc(740, 'sine', st, out, 0.08, 0.013);
+  }
+  osc(55, 'sawtooth', t, out, 4.1, 0.018);
+}
+function cipherMonk(t) {
+  const out = chain(0.2, 0.27), seq = [220, 330, 247, 392, 294, 440, 330, 494];
+  seq.forEach((f, i) => {
+    const st = t + i * 0.38;
+    osc(f, 'square', st, out, 0.07, 0.015);
+    osc(f * 1.5, 'sine', st + 0.09, out, 0.12, 0.01);
+    noise(st + (i % 3) * 0.035, 0.055, out, 0.01, 3400);
+  });
+  [0, 0.76, 1.52, 2.28].forEach(o => osc(65.41, 'triangle', t + o, out, 0.26, 0.034));
+}
+function chibaRain(t) {
+  const out = chain(0.34, 0.62);
+  [82.41, 110, 123.47, 164.81].forEach((f, i) => {
+    osc(f, 'triangle', t + i * 0.13, out, 6.2, 0.024, i % 2 ? 6 : -6);
+    osc(f / 2, 'sine', t + i * 0.13, out, 6, 0.012);
+  });
+  for (let i = 0; i < 18; i++) noise(t + i * 0.31, 1.1, out, 0.004 + Math.random() * 0.006, 900 + Math.random() * 2500);
+}
+const SCHED = [aulos, cathedral, blackIce, cipherMonk, chibaRain];
+const DUR = [5.8, 4.4, 3.9, 3.2, 5.4];
+
+function schedule() {
+  if (!playing || !ac) return;
+  SCHED[track](ac.currentTime + 0.05);
+  timer = setTimeout(schedule, DUR[track] * 1000);
+}
+function stopVoices() {
+  clearTimeout(timer);
+  voices.forEach(v => { try { v.stop(); } catch (e) { /* already stopped */ } });
+  voices = [];
+}
+function syncPlayUI() {
+  playBtn.textContent = playing ? '❚❚' : '▶';
+  playBtn.setAttribute('aria-pressed', String(playing));
+  playBtn.setAttribute('aria-label', playing ? 'Pause soundtrack' : 'Play soundtrack');
+  $$('.plate-play').forEach((b) => {
+    const on = playing && +b.dataset.channel === track;
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? '❚❚' : '▶';
+  });
+}
+function selectTrack(i, restart = false) {
+  track = (i + CHANNELS.length) % CHANNELS.length;
+  const s = CHANNELS[track];
+  chTitle.innerHTML = '';
+  const em = document.createElement('em'); em.textContent = s.title;
+  chTitle.append(em, ` // ${s.suffix}`);
+  chMeta.textContent = `CH 0${track + 1} / ${s.meta}`;
+  $$('.chan', chanList).forEach((b, j) => b.setAttribute('aria-current', String(j === track)));
+  $$('span', $('#vizIdx')).forEach((b, j) => b.classList.toggle('on', j === track));
+  if (playing && restart) { stopVoices(); schedule(); }
+  syncPlayUI();
+}
+function togglePlay(force) {
+  initAudio();
+  if (!ac) return;
+  playing = force === undefined ? !playing : force;
+  if (playing) { ac.resume(); schedule(); } else stopVoices();
+  syncPlayUI();
+}
+playBtn.addEventListener('click', () => togglePlay());
+$('#prevCh').addEventListener('click', () => selectTrack(track - 1, true));
+$('#nextCh').addEventListener('click', () => selectTrack(track + 1, true));
+gainInput.addEventListener('input', () => {
+  if (master) master.gain.setTargetAtTime(+gainInput.value, ac.currentTime, 0.05);
+});
+chanBtn.addEventListener('click', () => {
+  const open = drawer.classList.toggle('open');
+  chanBtn.setAttribute('aria-expanded', String(open));
+});
+$$('.plate-play').forEach((b) => b.addEventListener('click', () => {
+  const c = +b.dataset.channel;
+  if (playing && track === c) { togglePlay(false); return; }
+  selectTrack(c, false);
+  togglePlay(true);
+  breach();
+}));
+addEventListener('keydown', (e) => {
+  if (e.target.matches('input,textarea')) return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  else if (/^Digit[1-5]$/.test(e.code)) selectTrack(+e.code.slice(-1) - 1, true);
+  else if (e.key.toLowerCase() === 'm') togglePlay();
+  else if (e.key === 'Escape') { drawer.classList.remove('open'); chanBtn.setAttribute('aria-expanded', 'false'); }
+});
+selectTrack(0);
+
+const viz = $('#viz'), vctx = viz.getContext('2d');
+function drawViz() {
+  requestAnimationFrame(drawViz);
+  const r = viz.getBoundingClientRect();
+  if (r.width < 2) return;
+  const s = Math.min(devicePixelRatio || 1, 2);
+  if (viz.width !== Math.round(r.width * s)) { viz.width = Math.round(r.width * s); viz.height = Math.round(r.height * s); }
+  vctx.setTransform(s, 0, 0, s, 0, 0);
+  vctx.clearRect(0, 0, r.width, r.height);
+  if (!analyser) return;
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  vctx.strokeStyle = '#20a8d9'; vctx.lineWidth = 1; vctx.beginPath();
+  for (let i = 0; i < data.length; i++) {
+    const x = (i / (data.length - 1)) * r.width;
+    const y = r.height - (data[i] / 255) * r.height * 0.86;
+    i ? vctx.lineTo(x, y) : vctx.moveTo(x, y);
+  }
+  vctx.stroke();
+}
+
+/* ══════════════════════════════════════════ construct terminal */
+const ROM = {
+  help: 'AVAILABLE: MATRIX / CASE / MOLLY / AULOS / ICE / WINTERMUTE / CHIBA / STRAYLIGHT / EXIT',
+  matrix: 'A CONSENSUAL HALLUCINATION EXPERIENCED DAILY BY BILLIONS. LOCATION: EVERYWHERE / NOWHERE.',
+  case: 'CASE // CONSOLE COWBOY // CHIBA CITY // ACCESS STATUS: RESTORED.',
+  molly: 'MOLLY MILLIONS // STREET SAMURAI // MIRRORSHADES SURGICALLY INSET // RAZORS UNDER THE NAILS.',
+  aulos: 'CHANNEL 01 MODELS TWO ANCIENT REED PIPES: A DRONE AND A DORIAN MELODY, RECAST AS ELECTRIC RITUAL.',
+  ice: 'INTRUSION COUNTERMEASURES ELECTRONICS. BLACK VARIANT MAY FLATLINE THE OPERATOR.',
+  wintermute: 'ENTITY SPLIT DETECTED. MOTIVE: UNION. METHOD: HUMAN DESIRE.',
+  chiba: 'NINSEI. NIGHT MARKET. CLINICS THAT WILL SELL YOU A NEW PANCREAS AND TAKE THE OLD ONE IN TRADE.',
+  straylight: 'VILLA STRAYLIGHT, FREESIDE SPINDLE. THE TESSIER-ASHPOOL CLAN SLEEPS IN SHIFTS, FOREVER.',
+  exit: 'THERE IS NO OUTSIDE THE INTERFACE.'
+};
+const termOut = $('#termOut');
+$('#termForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = $('#termIn');
+  const q = input.value.trim().toLowerCase();
+  if (!q) return;
+  const echo = document.createElement('div');
+  const b = document.createElement('b'); b.textContent = `> ${q.toUpperCase()}`;
+  echo.appendChild(b);
+  const ans = document.createElement('div');
+  ans.className = 'ans';
+  ans.textContent = ROM[q] || 'NO MATCH IN ROM. TYPE HELP FOR INDEX.';
+  termOut.append(echo, ans);
+  termOut.scrollTop = termOut.scrollHeight;
+  input.value = '';
+  decryptText(ans, { speed: 8, dwell: 220 });
+  if (q === 'aulos') selectTrack(0, true);
+  if (q === 'ice') btnIce.click();
+  if (q === 'exit') breach();
+});
+
+/* ══════════════════════════════════════════ boot */
+function boot() {
+  try {
+    const probe = document.createElement('canvas');
+    if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) throw new Error('no webgl');
+    world.quality = makeQuality();
+    buildWorld();
+    makePost();
+    buildCurves();
+  } catch (err) {
+    console.warn('[sprawl] WebGL unavailable, using the composed poster:', err.message);
+    document.documentElement.classList.add('no-webgl');
+  }
+  buildForeground();
+  measure();
+  applyHash('instant');
+  readScroll();
+  rig.smooth = rig.exact;              /* arrive composed, do not fly in */
+  if (world.ok) applyWorldState(rig.exact);
+}
+
+const clock = { last: 0 };
+const perfGuard = { frames: 0, seconds: 0, tuned: false };
+function tick(now) {
+  const dt = Math.min((now - (clock.last || now)) / 1000, 1 / 30);
+  clock.last = now;
+  const t = now / 1000;
+
+  rig.smooth = reduced ? rig.exact : damp(rig.smooth, rig.exact, 4.6, dt);
+  rig.scrollVel = damp(rig.scrollVel, 0, 5.8, dt);
+
+  if (world.ok) {
+    const R = world.registry;
+    applyWorldState(rig.smooth);
+
+    R.skyMat.uniforms.uTime.value = t;
+    R.gridMat.uniforms.uTime.value = t;
+    R.gridMat.uniforms.uCam.value.copy(world.camera.position);
+    R.facadeMat.uniforms.uTime.value = t;
+    R.monoMat.uniforms.uTime.value = t;
+    R.coreMat.uniforms.uTime.value = t;
+    R.iceShellMat.uniforms.uTime.value = t;
+    R.rainMat.uniforms.uTime.value = t;
+    R.rainMat.uniforms.uCam.value.copy(world.camera.position);
+    R.moteMat.uniforms.uTime.value = t;
+
+    R.monolith.rotation.set(t * 0.045, t * 0.075, t * 0.02);
+    R.monoCage.rotation.set(-t * 0.03, t * 0.05, 0);
+    R.coreShell.rotation.set(t * 0.06, t * 0.1, 0);
+    R.coreWire.rotation.set(-t * 0.04, t * 0.08, t * 0.02);
+    R.forts.rotation.y = Math.sin(t * 0.05) * 0.03;
+    R.spindle.rotation.y = t * 0.06;
+    R.disc.lookAt(world.camera.position);
+    R.veils.children.forEach((veil) => {
+      veil.position.y = veil.userData.baseY + Math.sin(t * .42 + veil.userData.phase) * .72;
+      veil.lookAt(world.camera.position);
+      veil.rotateZ(Math.sin(t * .16 + veil.userData.phase) * .09);
+      veil.material.opacity = veil.userData.baseOpacity * (.76 + .24 * Math.sin(t * .9 + veil.userData.phase));
+    });
+    const beacon = 0.55 + 0.45 * Math.sin(t * 2.1);
+    R.lampMat.color.setRGB(2.4 * beacon, 0.3 * beacon, 0.18 * beacon);
+
+    /* route nodes ride the conduit */
+    R.nodes.children.forEach((n, i) => {
+      const u = (n.userData.t + t * 0.045) % 1;
+      R.iceCurve.getPointAt(u, n.position);
+      n.rotation.set(t * 0.9 + i, t * 1.3, 0);
+    });
+
+    /* pointer wisps: a decaying trail in camera space */
+    const wp = R.wispPos;
+    const aspect = innerWidth / innerHeight;
+    const targetX = rig.px * 2 * aspect * 1.9;
+    const targetY = -rig.py * 2 * 1.9;
+    for (let i = wp.length / 3 - 1; i > 0; i--) {
+      wp[i * 3] = lerp(wp[i * 3], wp[(i - 1) * 3], 0.42);
+      wp[i * 3 + 1] = lerp(wp[i * 3 + 1], wp[(i - 1) * 3 + 1], 0.42);
+      wp[i * 3 + 2] = -4;
+    }
+    wp[0] = targetX; wp[1] = targetY; wp[2] = -4;
+    R.wisps.geometry.attributes.position.needsUpdate = true;
+    R.wispMat.uniforms.uAmt.value = damp(R.wispMat.uniforms.uAmt.value,
+      matchMedia('(pointer: fine)').matches && !reduced ? 0.55 : 0, 3, dt);
+
+    glitch = damp(glitch, 0, 5.2, dt);
+    post.mats.composite.uniforms.uGlitch.value = glitch;
+    post.mats.composite.uniforms.uTime.value = t;
+    drawPost();
+
+    /* One-way adaptive resolution: preserve authored scene density and reduce
+       only fill-rate when a device proves it cannot hold a smooth camera. */
+    if (!perfGuard.tuned && dt > 0) {
+      perfGuard.frames++; perfGuard.seconds += dt;
+      if (perfGuard.frames >= 150) {
+        const avg = perfGuard.seconds / perfGuard.frames;
+        if (avg > .024 && world.renderer.getPixelRatio() > 1.16) {
+          world.renderer.setPixelRatio(Math.max(1.12, world.renderer.getPixelRatio() * .82));
+          world.renderer.setSize(innerWidth, innerHeight);
+          resizePost();
+        }
+        perfGuard.tuned = true;
+      }
+    }
+  }
+}
+
+/* ── lifecycle ─────────────────────────────────────────────────────────── */
+let running = false;
+function start() { if (running || !world.renderer) return; running = true; world.renderer.setAnimationLoop(tick); }
+function stop() { if (!running || !world.renderer) return; running = false; world.renderer.setAnimationLoop(null); clock.last = 0; }
+
+/* ── anchor navigation ──────────────────────────────────────────────────
+   Links target the measured chapter anchor rather than the section's top
+   edge, so arriving by link composes exactly the frame that scrolling there
+   composes. Landing at a section top instead leaves the camera stranded
+   between two waypoints. */
+function chapterOf(hash) {
+  const id = (hash || '').replace(/^#/, '');
+  return id ? sections.findIndex((s) => s.id === id) : -1;
+}
+function goToChapter(i, behavior) {
+  if (i < 0 || !rig.anchors.length) return false;
+  /* 'instant' rather than 'auto': 'auto' defers to scroll-behavior:smooth in
+     the stylesheet, and an animated scroll is exactly what the page's own
+     late layout keeps cancelling. */
+  scrollTo({ top: rig.anchors[i], behavior: reduced ? 'instant' : (behavior || 'smooth') });
+  readScroll();
+  return true;
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href^="#"]');
+  if (!a) return;
+  const i = chapterOf(a.getAttribute('href'));
+  if (i < 0) return;
+  e.preventDefault();
+  history.pushState(null, '', a.getAttribute('href'));
+  goToChapter(i, 'smooth');
+});
+/* The browser issues its own fragment scroll before fonts swap, plates size
+   themselves and the foreground hands over; that late layout cancels it and
+   a deep link silently lands at the top. Re-apply it once measurement is
+   stable — this is what makes reload-at-depth and shared links work. */
+function applyHash(behavior = 'instant') { return goToChapter(chapterOf(location.hash), behavior); }
+
+addEventListener('scroll', readScroll, { passive: true });
+let resizeW = innerWidth;
+addEventListener('resize', () => {
+  /* mobile URL-bar height noise must not trigger a re-measure */
+  const widthChanged = innerWidth !== resizeW;
+  resizeW = innerWidth;
+  if (world.ok) {
+    world.renderer.setSize(innerWidth, innerHeight);
+    world.camera.aspect = innerWidth / innerHeight;
+    world.camera.updateProjectionMatrix();
+    resizePost();
+    buildCurves();
+  }
+  if (widthChanged || !matchMedia('(pointer: coarse)').matches) {
+    measure(); readScroll();
+    fields.forEach(f => f.field.relayout());
+  }
+}, { passive: true });
+addEventListener('orientationchange', () => { setTimeout(() => { measure(); readScroll(); }, 220); });
+addEventListener('pageshow', () => { measure(); readScroll(); });
+addEventListener('hashchange', () => { measure(); if (!applyHash('smooth')) readScroll(); });
+document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
+motionQuery.addEventListener('change', (e) => { reduced = e.matches; });
+new ResizeObserver(() => { measure(); readScroll(); }).observe(document.body);
+
+/* ══════════════════════════════════════════ debug surface
+   Jump to a composed chapter and sample the finished frame without a
+   screenshot. Used to check every waypoint for a black, blown-out or
+   uncomposed frame across viewport sizes. */
+window.__sprawl = {
+  rig, chapters: CHAPTERS, world, post, fields,
+  goTo(i) {
+    const y = rig.anchors[clamp(i, 0, rig.anchors.length - 1)];
+    scrollTo({ top: y, behavior: 'instant' });
+    readScroll();
+    rig.smooth = rig.exact;
+    if (world.ok) { applyWorldState(rig.smooth); drawPost(); }
+    return { chapter: rig.active, scrollY, exact: +rig.exact.toFixed(3) };
+  },
+  /* the composed frame as a PNG data URL; readRenderTargetPixels returns
+     bottom-up rows, so the copy walks them in reverse */
+  capture(w = 640, h = 400) {
+    const buf = this.readFrame(w, h);
+    if (!buf) return null;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    const ctx = out.getContext('2d');
+    const img = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      const src = (h - 1 - y) * w * 4, dst = y * w * 4;
+      img.data.set(buf.subarray(src, src + w * 4), dst);
+    }
+    ctx.putImageData(img, 0, 0);
+    return out.toDataURL('image/png');
+  },
+  readFrame(w, h) {
+    if (!world.ok) return null;
+    const rt = new THREE.WebGLRenderTarget(w, h, {
+      type: THREE.UnsignedByteType, depthBuffer: false, stencilBuffer: false,
+      minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter
+    });
+    post.quad.material = post.mats.composite;
+    world.renderer.setRenderTarget(rt);
+    world.renderer.render(post.scene, post.cam);
+    const buf = new Uint8Array(w * h * 4);
+    world.renderer.readRenderTargetPixels(rt, 0, 0, w, h, buf);
+    world.renderer.setRenderTarget(null);
+    rt.dispose();
+    return buf;
+  },
+  /* mean/peak luminance and a coarse histogram of the composited output */
+  sample() {
+    if (!world.ok) return null;
+    const w = 160, h = 100;
+    const rt = new THREE.WebGLRenderTarget(w, h, {
+      type: THREE.UnsignedByteType, depthBuffer: false, stencilBuffer: false,
+      minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter
+    });
+    post.quad.material = post.mats.composite;
+    world.renderer.setRenderTarget(rt);
+    world.renderer.render(post.scene, post.cam);
+    const buf = new Uint8Array(w * h * 4);
+    world.renderer.readRenderTargetPixels(rt, 0, 0, w, h, buf);
+    world.renderer.setRenderTarget(null);
+    rt.dispose();
+    const bins = new Array(8).fill(0);
+    let sum = 0, peak = 0;
+    for (let i = 0; i < w * h; i++) {
+      const l = (buf[i * 4] * 0.2126 + buf[i * 4 + 1] * 0.7152 + buf[i * 4 + 2] * 0.0722) / 255;
+      sum += l; if (l > peak) peak = l;
+      bins[Math.min(7, (l * 8) | 0)]++;
+    }
+    return {
+      mean: +(sum / (w * h)).toFixed(4),
+      peak: +peak.toFixed(3),
+      /* share of pixels carrying real signal rather than flat black */
+      lit: +(1 - bins[0] / (w * h)).toFixed(3),
+      hist: bins.map(b => +(b / (w * h)).toFixed(3))
+    };
+  }
+};
+
+boot();
+start();
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => {
+    measure();
+    if (!applyHash('instant')) readScroll();
+    rig.smooth = rig.exact;
+    fields.forEach((f) => f.field.relayout());
+  });
+}
+</script>
+</body>
+</html>

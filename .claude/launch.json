@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "neuromancer",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4181",
+        "--directory",
+        "/Volumes/mejalism/104. Codex Design/neuromancer-interactive"
+      ],
+      "port": 4181
+    }
+  ]
+}
