@@ -1,9 +1,9 @@
-# Neuromancer V2 // The Chromatic Sprawl
+# Neuromancer V2.1 // The Chromatic Sprawl
 
 A second-generation scroll-driven audiovisual field guide to *Neuromancer*.
-One persistent Three.js world, seven authored camera movements, five
-live-synthesised transmissions, and no runtime dependency on a third-party
-server.
+One persistent Three.js world, seven authored camera movements, a playable
+space-fighter encounter, five live-synthesised transmissions, and no runtime
+dependency on a third-party server.
 
 Private site: https://neuromancer-chromatic-sprawl-v2.moailabs.chatgpt.site
 
@@ -37,7 +37,7 @@ runtime and nothing is placeholder art.
 **The palette comes from the supplied 1984 cover.** Typography, practical
 lights, holograms, chapter accents and post-process halation use cyan `#20a8d9`,
 process magenta `#f01570`, chalk white `#e0dfd9`, lavender gray `#6a6e8a`, and
-yellow-green `#b7ca58` over charcoal `#080b0d`.
+deep grid blue `#206e91` over charcoal `#080b0d`.
 
 **Chapters are data.** Camera position, target, FOV, mobile override, fog
 density and colour, key intensity, lattice, rain, motes, bloom and accent all
@@ -71,13 +71,27 @@ live in one ledger and are interpolated from the same progress value.
   chapter owns the viewport.
 - **Adaptive fill rate** — scene density is preserved; only render resolution
   steps down once when a device proves unable to hold the intended camera feel.
+- **Liquid masthead** — the two-line `NEURO / mancer` title is rasterised to a
+  responsive canvas and displaced in live horizontal bands wherever the cursor
+  or touch energy crosses it.
+- **Clean-first finish** — the first frame is sharp and unprocessed. Grain and
+  VHS scan/chroma/dropout are independent opt-in layers, while Light mode
+  remaps the interface and 3D exposure without rebuilding the world.
+- **Page 00 dogfight** — two procedural space fighters bank, chase, shoot and
+  leave emissive laser trails. Take control with a double-click or the HUD.
 
 ## Controls
 
 - Play with the transport, `Space` or `M`; channels with `1`–`5`
 - **Channels** lists all five sound worlds
+- **Grain**, **VHS** and **Light mode** are optional visual treatments; the
+  default opening remains clean HD
+- On page 00, double-click to take control, steer with pointer or arrow keys,
+  click to fire, and press `Escape` to release the fighter
 - **Auto drift** releases pointer parallax; **ICE layer** hardens the
   countermeasure; **Breach** fires a transport glitch
+- The Aulos score starts after the first scroll or gesture and follows scroll
+  momentum; volume and channel remain adjustable in the compact sound panel
 - Query the local ROM with `matrix`, `case`, `molly`, `aulos`, `ice`,
   `wintermute`, `chiba`, `straylight`, `help`
 
@@ -141,3 +155,4 @@ copyrighted music is used.
 ---
 
 Independent editorial study, 2026. Not affiliated with the author or publisher.
+This page was built by MEJALISM CORP by louisendajapar™ · TM Registered.
